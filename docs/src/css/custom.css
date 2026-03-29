@@ -1,23 +1,456 @@
-/* Space-themed color palette */
+/* ============================================================
+   STARDRIFT — Manufacturer's Technical Manual
+   OLED-dark / fuel-orange / architectural lines
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* ---- Color Tokens ---- */
 :root {
-  --ifm-color-primary: #4f8ef7;
-  --ifm-color-primary-dark: #2e77f5;
-  --ifm-color-primary-darker: #1d6df4;
-  --ifm-color-primary-darkest: #0a57d8;
-  --ifm-color-primary-light: #70a5f9;
-  --ifm-color-primary-lighter: #81aff9;
-  --ifm-color-primary-lightest: #b3ccfc;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-color-primary: #ff6a00;
+  --ifm-color-primary-dark: #e65f00;
+  --ifm-color-primary-darker: #d95a00;
+  --ifm-color-primary-darkest: #b34a00;
+  --ifm-color-primary-light: #ff7d1f;
+  --ifm-color-primary-lighter: #ff862e;
+  --ifm-color-primary-lightest: #ffa35c;
+
+  --sd-black: #000000;
+  --sd-surface: #0a0a0a;
+  --sd-surface-raised: #111111;
+  --sd-border: #1a1a1a;
+  --sd-border-accent: #2a2a2a;
+  --sd-text: #e0e0e0;
+  --sd-text-bright: #ffffff;
+  --sd-text-muted: #999999;
+  --sd-orange-dim: rgba(255, 106, 0, 0.15);
+  --sd-orange-border: rgba(255, 106, 0, 0.3);
+
+  --ifm-background-color: var(--sd-black);
+  --ifm-background-surface-color: var(--sd-surface);
+  --ifm-font-color-base: var(--sd-text);
+  --ifm-heading-color: var(--sd-text-bright);
+  --ifm-font-family-base: 'Inter', -apple-system, system-ui, sans-serif;
+  --ifm-heading-font-family: 'JetBrains Mono', monospace;
+  --ifm-font-family-monospace: 'JetBrains Mono', monospace;
+  --ifm-font-size-base: 16px;
+  --ifm-code-font-size: 90%;
+  --ifm-global-radius: 0;
+  --ifm-border-radius: 0;
+  --ifm-button-border-radius: 0;
+  --ifm-card-border-radius: 0;
+  --ifm-alert-border-radius: 0;
+  --ifm-code-border-radius: 0;
+  --ifm-global-shadow-lw: none;
+  --ifm-global-shadow-md: none;
+  --ifm-global-shadow-tl: none;
+  --ifm-link-color: var(--ifm-color-primary);
+  --ifm-link-hover-decoration: underline;
+  --ifm-navbar-height: 4rem;
+  --ifm-footer-background-color: var(--sd-black);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 106, 0, 0.1);
+}
+
+/* Force dark — no light mode */
+[data-theme='light'] {
+  --ifm-color-primary: #ff6a00;
+  --ifm-color-primary-dark: #e65f00;
+  --ifm-color-primary-darker: #d95a00;
+  --ifm-color-primary-darkest: #b34a00;
+  --ifm-color-primary-light: #ff7d1f;
+  --ifm-color-primary-lighter: #ff862e;
+  --ifm-color-primary-lightest: #ffa35c;
+
+  --ifm-background-color: var(--sd-black);
+  --ifm-background-surface-color: var(--sd-surface);
+  --ifm-font-color-base: var(--sd-text);
+  --ifm-heading-color: var(--sd-text-bright);
+  --ifm-footer-background-color: var(--sd-black);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 106, 0, 0.1);
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #6ba3ff;
-  --ifm-color-primary-dark: #4a8fff;
-  --ifm-color-primary-darker: #3984ff;
-  --ifm-color-primary-darkest: #0763ff;
-  --ifm-color-primary-light: #8cb7ff;
-  --ifm-color-primary-lighter: #9dc2ff;
-  --ifm-color-primary-lightest: #cfdeff;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-background-color: var(--sd-black);
+  --ifm-background-surface-color: var(--sd-surface);
+  --ifm-font-color-base: #e0e0e0;
+  --ifm-heading-color: #ffffff;
+  --ifm-footer-background-color: var(--sd-black);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 106, 0, 0.1);
+}
+
+/* ---- Base ---- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--sd-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Typography ---- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 2rem;
+  border-bottom: 2px solid var(--ifm-color-primary);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-size: 1.4rem;
+  color: var(--ifm-color-primary);
+  border-bottom: 1px solid var(--sd-border-accent);
+  padding-bottom: 0.4rem;
+  margin-top: 2.5rem;
+}
+
+h3 {
+  font-size: 1.1rem;
+  color: var(--sd-text-bright);
+}
+
+p {
+  line-height: 1.7;
+}
+
+strong {
+  color: var(--sd-text-bright);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--sd-border-accent);
+  margin: 2rem 0;
+}
+
+/* ---- Links ---- */
+a {
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ---- Navbar ---- */
+.navbar {
+  background: var(--sd-black) !important;
+  border-bottom: 1px solid var(--sd-border);
+  box-shadow: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.navbar__title {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ifm-color-primary) !important;
+}
+
+.navbar__link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.navbar__link--active {
+  color: var(--ifm-color-primary);
+}
+
+/* Hide the color mode toggle */
+.navbar__items .colorModeToggle,
+[class*='colorModeToggle'],
+button[class*='toggleButton'] {
+  display: none !important;
+}
+
+/* ---- Sidebar ---- */
+.menu {
+  background: var(--sd-black);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  padding-top: 1rem;
+}
+
+.menu__link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  border-radius: 0;
+  border-left: 2px solid transparent;
+  padding-left: 0.75rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.menu__link:hover {
+  background: var(--sd-surface);
+  color: var(--ifm-color-primary);
+}
+
+.menu__link--active,
+.menu__link--active:hover {
+  background: var(--sd-orange-dim) !important;
+  border-left: 2px solid var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.menu__list-item-collapsible > .menu__link {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--sd-text-muted);
+}
+
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--sd-border) !important;
+}
+
+/* ---- Main Content ---- */
+.main-wrapper {
+  background: var(--sd-black);
+}
+
+article {
+  max-width: 800px;
+}
+
+/* ---- Tables ---- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+  border: 1px solid var(--sd-border-accent);
+}
+
+table th {
+  background: var(--ifm-color-primary);
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--sd-border-accent);
+  text-align: left;
+}
+
+table td {
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  line-height: 1.5;
+}
+
+table tr:hover td {
+  background: var(--sd-surface-raised);
+}
+
+table td strong {
+  color: var(--sd-text-bright);
+}
+
+/* ---- Code ---- */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--sd-surface-raised);
+  border: 1px solid var(--sd-border);
+  color: var(--ifm-color-primary);
+  padding: 0.15em 0.35em;
+  font-size: 0.85em;
+}
+
+pre {
+  background: var(--sd-surface) !important;
+  border: 1px solid var(--sd-border);
+  border-left: 3px solid var(--ifm-color-primary);
+  border-radius: 0 !important;
+}
+
+pre code {
+  background: transparent;
+  border: none;
+  color: var(--sd-text);
+  padding: 0;
+}
+
+/* ---- Blockquotes ---- */
+blockquote {
+  background: var(--sd-surface);
+  border-left: 3px solid var(--ifm-color-primary);
+  border-radius: 0;
+  padding: 1rem 1.2rem;
+  color: var(--sd-text-bright);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+}
+
+blockquote p {
+  margin: 0;
+}
+
+/* ---- Admonitions ---- */
+.alert {
+  background: var(--sd-surface) !important;
+  border: 1px solid var(--sd-border) !important;
+  border-left: 3px solid var(--ifm-color-primary) !important;
+  border-radius: 0 !important;
+  color: var(--sd-text);
+}
+
+.alert .admonitionHeading_node_modules-\@docusaurus-theme-classic-lib-theme-Admonition-Layout-styles-module,
+.alert [class*='admonitionHeading'] {
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+[class*='admonition'] {
+  background: var(--sd-surface) !important;
+  border: 1px solid var(--sd-border) !important;
+  border-left: 3px solid var(--ifm-color-primary) !important;
+  border-radius: 0 !important;
+}
+
+/* ---- TOC ---- */
+.table-of-contents__link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.table-of-contents__link--active {
+  color: var(--ifm-color-primary);
+}
+
+/* ---- Footer ---- */
+.footer {
+  background: var(--sd-black) !important;
+  border-top: 1px solid var(--sd-border);
+  padding: 2rem 0;
+}
+
+.footer__title {
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--sd-text-muted);
+}
+
+.footer__link-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.footer__copyright {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--sd-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--sd-border);
+}
+
+/* ---- Pagination ---- */
+.pagination-nav__link {
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border);
+  border-radius: 0;
+  transition: border-color 0.15s ease;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.pagination-nav__sublabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sd-text-muted);
+}
+
+.pagination-nav__label {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--sd-text-bright);
+}
+
+/* ---- Breadcrumbs ---- */
+.breadcrumbs__link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sd-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sd-border-accent);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ifm-color-primary);
+}
+
+/* ---- Selection ---- */
+::selection {
+  background: rgba(255, 106, 0, 0.3);
+  color: #fff;
+}
+
+/* ---- Search ---- */
+[class*='searchBox'] input {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--sd-surface) !important;
+  border: 1px solid var(--sd-border) !important;
+  border-radius: 0 !important;
+}
+
+/* ---- Lists in docs ---- */
+.markdown li {
+  margin-bottom: 0.3rem;
+}
+
+.markdown li::marker {
+  color: var(--ifm-color-primary);
+}
+
+/* ---- Buttons (generic) ---- */
+.button {
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.8rem;
+  border-radius: 0;
+  transition: all 0.15s ease;
 }

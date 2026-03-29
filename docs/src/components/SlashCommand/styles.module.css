@@ -1,0 +1,131 @@
+/* ---- Slash Command Card ---- */
+.card {
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border);
+  border-left: 3px solid var(--ifm-color-primary);
+  margin-bottom: 1.25rem;
+  padding: 0;
+  transition: border-color 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--sd-border-accent);
+  border-left-color: var(--ifm-color-primary);
+}
+
+.admin {
+  border-left-color: #888;
+}
+
+.admin:hover {
+  border-left-color: #aaa;
+}
+
+/* ---- Header row ---- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--sd-border);
+  background: var(--sd-surface-raised);
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.slash {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+  user-select: none;
+}
+
+.name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--sd-text-bright);
+}
+
+/* ---- Admin badge ---- */
+.badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #000;
+  background: #888;
+  padding: 0.15em 0.5em;
+  margin-left: 0.75rem;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* ---- Copy button ---- */
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sd-text-muted);
+  background: transparent;
+  border: 1px solid var(--sd-border-accent);
+  padding: 0.3em 0.6em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.copyBtn:hover {
+  color: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+  background: var(--sd-orange-dim);
+}
+
+.copyBtn.copied {
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+/* ---- Description ---- */
+.description {
+  font-size: 0.95rem;
+  color: var(--sd-text);
+  padding: 0.75rem 1rem 0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ---- Details / body ---- */
+.details {
+  padding: 0.25rem 1rem 0.75rem;
+  font-size: 0.88rem;
+  color: var(--sd-text);
+}
+
+.details ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.details li {
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.details li::marker {
+  color: var(--sd-text-muted);
+}
+
+.admin .details li::marker {
+  color: var(--sd-text-muted);
+}

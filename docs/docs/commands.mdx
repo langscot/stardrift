@@ -4,35 +4,34 @@ title: Commands Reference
 sidebar_position: 6
 ---
 
+import SlashCommand from '@site/src/components/SlashCommand';
+
 # Commands Reference
 
-All Stellar Drift interactions use Discord slash commands. Type `/` in any channel to see available commands.
+All Stardrift interactions use Discord slash commands. Type `/` in any channel to see available commands.
 
 ---
 
 ## Gameplay Commands
 
-### `/mine`
-Mine ore from your current location.
+<SlashCommand name="mine" description="Mine ore from your current location.">
 
 - Use in a **planet channel** or **asteroid belt channel**
 - 30-second cooldown between mines
 - Adds ore directly to your cargo hold
 - Blocked if your cargo is full or you're in transit
 
----
+</SlashCommand>
 
-### `/inventory`
-View your current cargo and station storage.
+<SlashCommand name="inventory" description="View your current cargo and station storage.">
 
 - Shows cargo hold (used / capacity)
 - Shows station storage at your current system
 - Shows current fuel level
 
----
+</SlashCommand>
 
-### `/sell`
-Open the NPC market and sell cargo.
+<SlashCommand name="sell" description="Open the NPC market and sell cargo.">
 
 - Use in `#station-market`
 - Shows current prices per ore type
@@ -40,10 +39,9 @@ Open the NPC market and sell cargo.
 - Individual item buttons let you sell specific stacks
 - Prices shown reflect any proxy tax if applicable
 
----
+</SlashCommand>
 
-### `/travel`
-View nearby systems and initiate a jump.
+<SlashCommand name="travel" description="View nearby systems and initiate a jump.">
 
 - Use in `#travel-hub`
 - Lists nearby enrolled systems sorted by distance
@@ -51,23 +49,23 @@ View nearby systems and initiate a jump.
 - **Confirm** button starts the jump
 - You're locked out of game actions while in transit
 
----
+</SlashCommand>
 
-### `/map`
-Display a star map of systems near your current location.
+<SlashCommand name="map" description="Display a star map of systems near your current location.">
 
 - Shows up to 15 systems within 50 light-years
 - Lists coordinates, star type, resource rating, and distance
 - Useful for planning travel routes
 
----
+</SlashCommand>
 
-### `/menu`
-Open the main navigation menu.
+<SlashCommand name="menu" description="Open the main navigation menu.">
 
 - Shows your current status (location, fuel, credits)
 - Buttons to quickly access cargo, map, mining, selling, and travel sections
 - Available from any channel
+
+</SlashCommand>
 
 ---
 
@@ -75,38 +73,36 @@ Open the main navigation menu.
 
 These commands require **Administrator** permission in the Discord server.
 
-### `/enroll`
-Claim an unenrolled system for your server.
+<SlashCommand name="enroll" description="Claim an unenrolled system for your server." admin>
 
 - Registers the system in the galaxy database
 - Creates all gameplay channels automatically
 - Links the server's guild ID to the system's galactic coordinates
 
----
+</SlashCommand>
 
-### `/setup-hub`
-Register Sol Nexus (the central hub) as a proxy in your server.
+<SlashCommand name="setup-hub" description="Register Sol Nexus (the central hub) as a proxy in your server." admin>
 
 - Gives your server access to Sol Nexus channels
 - Proxy penalties apply (70% mining yield, 80% sell rate)
 - Useful for servers that want a gateway to the hub without full enrollment
 
----
+</SlashCommand>
 
-### `/add-proxy`
-Mirror another enrolled system into your server.
+<SlashCommand name="add-proxy" description="Mirror another enrolled system into your server." admin>
 
 - Creates proxy channels for a system your server doesn't own
 - Players access the system with proxy penalties
 - Useful for multi-system server setups
 
----
+</SlashCommand>
 
-### `/systems`
-List all systems registered on the current Discord server.
+<SlashCommand name="systems" description="List all systems registered on the current Discord server." admin>
 
 - Shows home systems and proxy systems
 - Includes resource ratings and enrollment dates
+
+</SlashCommand>
 
 ---
 
