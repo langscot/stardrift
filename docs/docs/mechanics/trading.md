@@ -6,7 +6,7 @@ sidebar_position: 4
 
 # Trading & Economy
 
-Credits are the universal currency of the Stellar Drift galaxy. Every transaction uses credits, regardless of which system you're in.
+Credits are the universal currency of the Stardrift galaxy. Every transaction uses credits, regardless of which system you're in.
 
 ## Selling to the NPC Market
 

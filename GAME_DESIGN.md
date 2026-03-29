@@ -1,4 +1,4 @@
-# Stellar Drift — Discord-Driven Space MMO
+# Stardrift — Discord-Driven Space MMO
 
 ## Concept
 

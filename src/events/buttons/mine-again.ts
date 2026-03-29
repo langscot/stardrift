@@ -3,6 +3,7 @@ import { db } from "../../db/index.js";
 import { players } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { executeMining } from "../../systems/mining-action.js";
+import { config } from "../../config.js";
 import {
   miningResultDisplay,
   miningCooldownDisplay,
@@ -43,45 +44,52 @@ export async function handleMineAgain(
     player.currentSystemId
   );
 
+  const ephemeralV2Flags = MessageFlags.IsComponentsV2 | 64;
+
   if (result.type === "cooldown") {
-    await interaction.update({
+    await interaction.deferUpdate();
+    await interaction.followUp({
       components: [miningCooldownDisplay(result.remainingSeconds)],
+      flags: ephemeralV2Flags,
     });
     return;
   }
 
   if (result.type === "cargo_full") {
-    await interaction.update({ components: [cargoFullDisplay()] });
+    await interaction.deferUpdate();
+    await interaction.followUp({ components: [cargoFullDisplay()], flags: ephemeralV2Flags });
     return;
   }
 
   if (result.type === "error") {
-    await interaction.update({
-      components: [
-        miningResultDisplay({
-          itemDisplayName: result.message,
-          quantity: 0,
-          cargoUsed: 0,
-          cargoCapacity: player.cargoCapacity,
-          showButtons: false,
-        }),
-      ],
-    });
+    await interaction.deferUpdate();
+    await interaction.followUp({ content: result.message, flags: 64 });
     return;
   }
 
+  const displayData = {
+    itemDisplayName: result.itemDisplayName,
+    quantity: result.quantity,
+    cargoUsed: result.cargoUsed,
+    cargoCapacity: result.cargoCapacity,
+    isProxy: result.isProxy,
+    showButtons: true,
+    channelType: result.channelType,
+    referenceId: result.referenceId,
+  };
+
   await interaction.update({
-    components: [
-      miningResultDisplay({
-        itemDisplayName: result.itemDisplayName,
-        quantity: result.quantity,
-        cargoUsed: result.cargoUsed,
-        cargoCapacity: result.cargoCapacity,
-        isProxy: result.isProxy,
-        showButtons: true,
-        channelType: result.channelType,
-        referenceId: result.referenceId,
-      }),
-    ],
+    components: [miningResultDisplay({ ...displayData, cooldownSeconds: config.MINING_COOLDOWN_SECONDS })],
   });
+
+  setTimeout(async () => {
+    try {
+      await interaction.editReply({
+        components: [miningResultDisplay(displayData)],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    } catch {
+      // Message was deleted or token expired — ignore
+    }
+  }, config.MINING_COOLDOWN_SECONDS * 1000);
 }

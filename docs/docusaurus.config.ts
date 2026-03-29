@@ -2,8 +2,10 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
+const DISCORD_URL = process.env.DISCORD_URL || 'https://discord.gg/hTMz4g93mh';
+
 const config: Config = {
-  title: 'Stellar Drift',
+  title: 'Stardrift',
   tagline: 'A Discord-native space MMO — mine, trade, and conquer the galaxy.',
   favicon: 'img/favicon.ico',
 
@@ -11,7 +13,7 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://your-stellar-drift-docs.vercel.app',
+  url: 'https://stardrift.lang.scot',
   baseUrl: '/',
 
   onBrokenLinks: 'throw',
@@ -19,6 +21,10 @@ const config: Config = {
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
+  },
+
+  customFields: {
+    discordUrl: DISCORD_URL,
   },
 
   i18n: {
@@ -45,10 +51,11 @@ const config: Config = {
   themeConfig: {
     colorMode: {
       defaultMode: 'dark',
-      respectPrefersColorScheme: true,
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
     navbar: {
-      title: 'Stellar Drift',
+      title: 'STARDRIFT',
       items: [
         {
           type: 'docSidebar',
@@ -65,6 +72,11 @@ const config: Config = {
           to: '/commands',
           label: 'Commands',
           position: 'left',
+        },
+        {
+          href: DISCORD_URL,
+          label: 'Discord',
+          position: 'right',
         },
       ],
     },
@@ -88,8 +100,14 @@ const config: Config = {
             {label: 'Roadmap', to: '/roadmap'},
           ],
         },
+        {
+          title: 'Community',
+          items: [
+            {label: 'Join the Discord', href: DISCORD_URL},
+          ],
+        },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Stellar Drift. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Stardrift. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

@@ -6,13 +6,13 @@ sidebar_position: 2
 
 # Getting Started
 
-## 1. Join a Stellar Drift Server
+## 1. Join a Stardrift Server
 
-You need to be in a Discord server that has the Stellar Drift bot installed. The bot's home server — **Sol Nexus** — is where all new players start. If you're reading this, you're probably already there.
+You need to be in a Discord server that has the Stardrift bot installed. The bot's home server — **Sol Nexus** — is where all new players start. If you're reading this, you're probably already there.
 
 ## 2. Your First Interaction
 
-The moment you use any Stellar Drift command, your pilot account is created automatically. You'll be placed at **Sol Nexus** (0, 0) with:
+The moment you use any Stardrift command, your pilot account is created automatically. You'll be placed at **Sol Nexus** (0, 0) with:
 
 | Stat | Starting Value |
 |------|---------------|

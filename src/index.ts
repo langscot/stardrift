@@ -4,7 +4,7 @@ import { pool } from "./db/index.js";
 import { startBot } from "./bot.js";
 
 async function main() {
-  console.log("Starting Stellar Drift...");
+  console.log("Starting Stardrift...");
 
   // Connect Redis
   await redis.connect();

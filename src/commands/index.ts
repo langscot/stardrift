@@ -10,6 +10,9 @@ import { enrollCommand } from "./enroll.js";
 import { addProxyCommand } from "./add-proxy.js";
 import { systemsCommand } from "./systems.js";
 import { menuCommand } from "./menu.js";
+import { adminCommand } from "./admin.js";
+import { syncCommand } from "./sync.js";
+import { removeSystemCommand } from "./remove-system.js";
 
 export const commands = new Collection<string, Command>();
 
@@ -28,3 +31,6 @@ registerCommand(enrollCommand);
 registerCommand(addProxyCommand);
 registerCommand(systemsCommand);
 registerCommand(menuCommand);
+registerCommand(adminCommand);
+registerCommand(syncCommand);
+registerCommand(removeSystemCommand);

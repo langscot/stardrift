@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== Stellar Drift Bot ==="
+echo "=== Stardrift Bot ==="
 
 # Run DB migrations
 echo "Running database migrations..."

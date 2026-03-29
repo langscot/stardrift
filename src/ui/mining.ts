@@ -17,6 +17,8 @@ interface MiningDisplayData {
   /** Used to construct the Mine Again button customId */
   channelType?: string;
   referenceId?: number | null;
+  /** When > 0, disables the Mine Again button and shows a countdown label */
+  cooldownSeconds?: number;
 }
 
 export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
@@ -37,11 +39,13 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
     );
 
   if (data.showButtons) {
+    const onCooldown = (data.cooldownSeconds ?? 0) > 0;
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`mine_again:${data.channelType}:${data.referenceId ?? "0"}`)
-        .setLabel("⛏️ Mine Again")
-        .setStyle(ButtonStyle.Primary),
+        .setLabel(onCooldown ? `⏳ Ready in ${data.cooldownSeconds}s` : "⛏️ Mine Again")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(onCooldown),
       new ButtonBuilder()
         .setCustomId("menu_open")
         .setLabel("🏠 Menu")

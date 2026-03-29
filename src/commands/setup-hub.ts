@@ -3,7 +3,7 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js";
-import { registerHubProxy, getGuildSystem } from "../db/queries/systems.js";
+import { registerHub, getGuildSystem } from "../db/queries/systems.js";
 import { createSystemChannels } from "../systems/enrollment.js";
 import type { Command } from "./types.js";
 
@@ -26,10 +26,13 @@ export const setupHubCommand: Command = {
 
     await interaction.deferReply();
 
-    // Register hub as a proxy on this guild (idempotent — safe to re-run)
+    // Register hub on this guild (first server owns it, others get proxy)
     let hub;
+    let isProxy: boolean;
     try {
-      hub = await registerHubProxy(interaction.guild.id, interaction.user.id);
+      const result = await registerHub(interaction.guild.id, interaction.user.id);
+      hub = result.hub;
+      isProxy = result.isProxy;
     } catch (err) {
       await interaction.editReply(
         "Hub system not found. The galaxy may not be seeded yet."
@@ -49,7 +52,7 @@ export const setupHubCommand: Command = {
 
     // Create hub channels
     try {
-      await createSystemChannels(interaction.guild, hub.id, /* isProxy */ true);
+      await createSystemChannels(interaction.guild, hub.id, isProxy);
     } catch (err) {
       console.error("Channel creation error:", err);
       await interaction.editReply(
@@ -58,8 +61,9 @@ export const setupHubCommand: Command = {
       return;
     }
 
+    const label = isProxy ? " (proxy)" : "";
     await interaction.editReply(
-      `**${hub.name}** channels created! 🚀\n\n` +
+      `**${hub.name}**${label} channels created! 🚀\n\n` +
       `New players who join this server can start playing Stardrift immediately.\n` +
       `To claim your own star system, explore the galaxy and run \`/enroll\` with a discovered system.`
     );

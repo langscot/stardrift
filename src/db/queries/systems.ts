@@ -121,17 +121,28 @@ export async function addProxySystem(
 }
 
 /**
- * Register the hub system on a guild as a proxy.
- * Used by /setup-hub — Sol Nexus is shared across all guilds, never "owned".
+ * Register the hub system on a guild.
+ * The first guild to run /setup-hub owns the hub (isProxy=false).
+ * All subsequent guilds get it as a proxy (isProxy=true).
  */
-export async function registerHubProxy(guildId: string, addedByUserId: string) {
+export async function registerHub(guildId: string, addedByUserId: string) {
   const hub = await getHubSystem();
   if (!hub) throw new Error("Hub system not found");
 
+  // If no guild owns the hub yet, this guild becomes the owner
+  const isProxy = !!hub.guildId && hub.guildId !== guildId;
+
+  if (!hub.guildId) {
+    await db
+      .update(systems)
+      .set({ guildId, ownerUserId: addedByUserId, enrolledAt: new Date() })
+      .where(eq(systems.id, hub.id));
+  }
+
   await db
     .insert(guildSystems)
-    .values({ guildId, systemId: hub.id, isProxy: true, addedByUserId })
+    .values({ guildId, systemId: hub.id, isProxy, addedByUserId })
     .onConflictDoNothing();
 
-  return hub;
+  return { hub, isProxy };
 }

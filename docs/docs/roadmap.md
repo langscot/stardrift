@@ -6,7 +6,7 @@ sidebar_position: 7
 
 # Roadmap
 
-Stellar Drift launched as a focused MVP. Here's where the game is headed.
+Stardrift launched as a focused MVP. Here's where the game is headed.
 
 ---
 

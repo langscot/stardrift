@@ -23,6 +23,20 @@ const envSchema = z.object({
   // AI Q&A (optional — feature disabled if API key not set)
   AI_GATEWAY_API_KEY: z.string().optional(),
   AI_MODEL: z.string().default("google/gemini-2.0-flash-lite"),
+  ARIA_CHANNEL_ID: z.string().optional(),
+  // OpenAI Moderation (optional — skipped if not set)
+  OPENAI_API_KEY: z.string().optional(),
+
+  // Admin system — comma-separated Discord user IDs
+  ADMIN_USER_IDS: z
+    .string()
+    .default("")
+    .transform((val) =>
+      val
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean)
+    ),
 });
 
 function loadConfig() {

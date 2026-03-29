@@ -6,7 +6,7 @@ sidebar_position: 2
 
 # Star Systems
 
-Each star system in Stellar Drift is a fully realized location with its own star, planets, asteroid belts, and economy.
+Each star system in Stardrift is a fully realized location with its own star, planets, asteroid belts, and economy.
 
 ## System Channels
 

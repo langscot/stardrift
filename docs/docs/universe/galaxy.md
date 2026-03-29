@@ -6,7 +6,7 @@ sidebar_position: 1
 
 # The Galaxy
 
-The Stellar Drift universe is a pre-generated galaxy of over **100,000 star systems** laid out across a 2D coordinate plane. All systems exist from the moment the game launched — they're waiting to be discovered and claimed.
+The Stardrift universe is a pre-generated galaxy of over **100,000 star systems** laid out across a 2D coordinate plane. All systems exist from the moment the game launched — they're waiting to be discovered and claimed.
 
 ## Scale & Layout
 

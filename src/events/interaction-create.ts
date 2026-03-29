@@ -1,6 +1,13 @@
 import { Interaction, MessageFlags } from "discord.js";
 import { commands } from "../commands/index.js";
 import { ensurePlayer } from "../middleware/player-ensure.js";
+import { getBanReason } from "../redis/admin.js";
+import { isAdmin } from "../admin/index.js";
+import {
+  handleVerifyButton,
+  handleRegenButton,
+  handleTotpModal,
+} from "../admin/setup-flow.js";
 import { handleSellConfirm } from "./buttons/sell-confirm.js";
 import { handleSellAll } from "./buttons/sell-all.js";
 import { handleTravelConfirm } from "./buttons/travel-confirm.js";
@@ -30,6 +37,15 @@ export async function handleInteractionCreate(
     }
 
     try {
+      const banReason = await getBanReason(interaction.user.id);
+      if (banReason) {
+        await interaction.reply({
+          content: `You are banned from Stardrift. **Reason:** ${banReason}`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
       await ensurePlayer(interaction);
       await command.execute(interaction);
     } catch (error) {
@@ -66,6 +82,18 @@ export async function handleInteractionCreate(
           await handleMineAgain(interaction);
           break;
 
+        case "admin_totp_verify":
+          if (isAdmin(interaction.user.id)) {
+            await handleVerifyButton(interaction);
+          }
+          break;
+
+        case "admin_totp_regen":
+          if (isAdmin(interaction.user.id)) {
+            await handleRegenButton(interaction);
+          }
+          break;
+
         default:
           if (MENU_ACTIONS.has(action)) {
             await handleMenuNav(interaction, action);
@@ -76,6 +104,23 @@ export async function handleInteractionCreate(
       }
     } catch (error) {
       console.error("Error handling button:", error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction
+          .reply({ content: "Something went wrong.", flags: 64 })
+          .catch(() => {});
+      }
+    }
+    return;
+  }
+
+  // Handle modal submissions
+  if (interaction.isModalSubmit()) {
+    try {
+      if (interaction.customId.startsWith("admin_totp_modal:")) {
+        await handleTotpModal(interaction);
+      }
+    } catch (error) {
+      console.error("Error handling modal:", error);
       if (!interaction.replied && !interaction.deferred) {
         await interaction
           .reply({ content: "Something went wrong.", flags: 64 })
