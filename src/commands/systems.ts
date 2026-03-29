@@ -66,7 +66,7 @@ export const systemsCommand: Command = {
       }
     }
 
-    text += `\n*Use \`/enroll\` to claim a discovered system · \`/add-proxy\` to mirror another server's system*`;
+    text += `\n*Use \`/claim-system\` to claim a discovered system · \`/add-proxy\` to mirror another server's system*`;
 
     const container = new ContainerBuilder()
       .setAccentColor(0x5865f2)

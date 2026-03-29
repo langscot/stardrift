@@ -236,15 +236,16 @@ table {
 }
 
 table th {
-  background: var(--ifm-color-primary);
-  color: #000;
+  background: var(--sd-surface-raised);
+  color: var(--ifm-color-primary);
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 0.6rem 0.8rem;
+  padding: 0.7rem 0.8rem;
   border: 1px solid var(--sd-border-accent);
+  border-bottom: 2px solid var(--ifm-color-primary);
   text-align: left;
 }
 

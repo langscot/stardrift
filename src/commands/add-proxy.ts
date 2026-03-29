@@ -47,7 +47,7 @@ export const addProxyCommand: Command = {
     // (Hub is always available; other systems need an owner)
     if (!system.isHub && !system.guildId) {
       await interaction.editReply(
-        `**${system.name}** hasn't been enrolled by anyone yet. It can't be proxied until someone claims it with \`/enroll\`.`
+        `**${system.name}** hasn't been enrolled by anyone yet. It can't be proxied until someone claims it with \`/claim-system\`.`
       );
       return;
     }

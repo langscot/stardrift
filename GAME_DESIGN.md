@@ -15,7 +15,7 @@ Inspired by Virtual Fisher's model (cross-server progress, slash commands, idle/
 - The game's own Discord server is the **central hub system** ("Sol Nexus") at galactic coordinates (0, 0)
 - All new players spawn at the hub automatically on first interaction
 - Players do NOT get a free system — they must explore to discover and claim new systems
-- To claim a system: discover it via exploration, then create a Discord server and run `/enroll` to link it
+- To claim a system: discover it via exploration, then create a Discord server and run `/claim-system` to link it
 - The bot auto-creates channels for each location (station, planets, asteroid belts, etc.)
 - Player progress is tied to their Discord user ID — works across all servers
 
@@ -168,7 +168,7 @@ Players can own multiple ships but only fly one at a time. Other ships stay dock
 1. Player's scan detects a system → shown a preview (star type, planet count, resource rating)
 2. Player chooses to **Bank** or **Pass** (max 3 banked at a time)
 3. Banked systems have a **72-hour claim window** — only the discoverer can claim
-4. To claim: create a Discord server, run `/enroll-system`, select the banked discovery
+4. To claim: create a Discord server, run `/claim-system`, select the banked discovery
 5. If claim window expires → system becomes public knowledge, anyone can claim it
 
 **Deep space = rarer finds.** Systems far from the galactic core have higher chance of rare star types, exotic resources, and unique planet compositions.
@@ -264,7 +264,7 @@ All gameplay happens through Discord's interaction system:
 
 Focus on the tightest possible loop before adding complexity:
 
-1. **System enrollment** — Create server, `/enroll`, get a generated system with channels
+1. **System claiming** — Create server, `/claim-system`, get a generated system with channels
 2. **Mining** — `/mine` in planet/belt channels, get ore, cooldown-based
 3. **Inventory** — `/inventory` to see what you have
 4. **Selling** — `/sell` to sell ore for credits at the station (NPC buyer for MVP, player market later)

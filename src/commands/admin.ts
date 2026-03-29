@@ -18,6 +18,25 @@ import {
   recordUnban,
   getActiveBan,
 } from "../db/queries/admin.js";
+import {
+  getOverviewStats,
+  getEnrolledSystemsPaginated,
+  getSystemByIdOrName,
+  getSystemDetailById,
+  getPlayersPaginated,
+  getPlayerDetail,
+  updatePlayerFields,
+  updateSystemFields,
+  unenrollSystem,
+} from "../db/queries/admin-dashboard.js";
+import {
+  buildStatsDisplay,
+  buildSystemListDisplay,
+  buildSystemDetailDisplay,
+  buildPlayerListDisplay,
+  buildPlayerDetailDisplay,
+} from "../ui/admin.js";
+import { errorContainer } from "../ui/common.js";
 import { db } from "../db/index.js";
 import { players } from "../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -51,7 +70,7 @@ async function rejectIfNotElevated(
   return false;
 }
 
-// ── Subcommand handlers ───────────────────────────────────────────────────────
+// ── Existing subcommand handlers ────────────────────────────────────────────
 
 /** /admin activate <code> — verify TOTP and grant a 15-minute elevated session. */
 async function handleActivate(
@@ -186,12 +205,282 @@ async function handleUnban(
   });
 }
 
+// ── Dashboard subcommand handlers ───────────────────────────────────────────
+
+/** /admin stats — game overview stats. */
+async function handleStats(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+
+  const stats = await getOverviewStats();
+  const containers = buildStatsDisplay(stats);
+
+  await interaction.reply({
+    components: containers,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/** /admin systems [page] [filter] — paginated enrolled systems list. */
+async function handleSystems(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+
+  const page = interaction.options.getInteger("page") ?? 1;
+  const filter = interaction.options.getString("filter") ?? undefined;
+
+  const result = await getEnrolledSystemsPaginated(page, filter);
+  const containers = buildSystemListDisplay(
+    result.items,
+    result.page,
+    result.totalPages,
+    result.totalCount,
+    filter
+  );
+
+  await interaction.reply({
+    components: containers,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/** /admin system <name_or_id> — detailed view of a single system. */
+async function handleSystem(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+
+  const idOrName = interaction.options.getString("name_or_id", true);
+  const system = await getSystemByIdOrName(idOrName);
+
+  if (!system) {
+    await interaction.reply({
+      components: [errorContainer(`System "${idOrName}" not found.`)],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const detail = await getSystemDetailById(system.id);
+  if (!detail) {
+    await interaction.reply({
+      components: [errorContainer("Failed to load system detail.")],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const containers = buildSystemDetailDisplay(
+    detail.system,
+    detail.planets,
+    detail.belts,
+    detail.guilds
+  );
+
+  await interaction.reply({
+    components: containers,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/** /admin players [page] [search] — paginated player list. */
+async function handlePlayers(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+
+  const page = interaction.options.getInteger("page") ?? 1;
+  const search = interaction.options.getString("search") ?? undefined;
+
+  const result = await getPlayersPaginated(page, search);
+  const containers = buildPlayerListDisplay(
+    result.items,
+    result.page,
+    result.totalPages,
+    result.totalCount,
+    search
+  );
+
+  await interaction.reply({
+    components: containers,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/** /admin player <user> — detailed player view. */
+async function handlePlayer(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+
+  const target = interaction.options.getUser("user", true);
+  const detail = await getPlayerDetail(target.id);
+
+  if (!detail) {
+    await interaction.reply({
+      components: [errorContainer(`Player <@${target.id}> has no game record.`)],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const containers = buildPlayerDetailDisplay(
+    detail.player,
+    detail.cargo,
+    detail.bans,
+    detail.currentSystem
+  );
+
+  await interaction.reply({
+    components: containers,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/** /admin edit-player <user> [credits] [fuel] [fuel_capacity] [cargo_capacity] — modify player stats (elevated). */
+async function handleEditPlayer(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+  if (await rejectIfNotElevated(interaction)) return;
+
+  const target = interaction.options.getUser("user", true);
+
+  const player = await db.query.players.findFirst({
+    where: eq(players.userId, target.id),
+  });
+  if (!player) {
+    await interaction.reply({
+      components: [errorContainer(`Player <@${target.id}> has no game record.`)],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const credits = interaction.options.getInteger("credits") ?? undefined;
+  const fuel = interaction.options.getInteger("fuel") ?? undefined;
+  const fuelCapacity = interaction.options.getInteger("fuel_capacity") ?? undefined;
+  const cargoCapacity = interaction.options.getInteger("cargo_capacity") ?? undefined;
+
+  if (
+    credits === undefined &&
+    fuel === undefined &&
+    fuelCapacity === undefined &&
+    cargoCapacity === undefined
+  ) {
+    await interaction.reply({
+      content: "No fields to update. Provide at least one option.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  await updatePlayerFields(target.id, {
+    credits,
+    fuel,
+    fuelCapacity,
+    cargoCapacity,
+  });
+
+  const changes: string[] = [];
+  if (credits !== undefined) changes.push(`Credits → **${credits.toLocaleString()}**`);
+  if (fuel !== undefined) changes.push(`Fuel → **${fuel}**`);
+  if (fuelCapacity !== undefined) changes.push(`Fuel Capacity → **${fuelCapacity}**`);
+  if (cargoCapacity !== undefined) changes.push(`Cargo Capacity → **${cargoCapacity}**`);
+
+  await interaction.reply({
+    content: `Updated <@${target.id}>:\n${changes.join("\n")}`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/** /admin edit-system <name_or_id> [name] [resource_rating] [star_type] — modify system (elevated). */
+async function handleEditSystem(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+  if (await rejectIfNotElevated(interaction)) return;
+
+  const idOrName = interaction.options.getString("name_or_id", true);
+  const system = await getSystemByIdOrName(idOrName);
+
+  if (!system) {
+    await interaction.reply({
+      components: [errorContainer(`System "${idOrName}" not found.`)],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const name = interaction.options.getString("name") ?? undefined;
+  const resourceRating = interaction.options.getInteger("resource_rating") ?? undefined;
+  const starType = interaction.options.getString("star_type") ?? undefined;
+
+  if (name === undefined && resourceRating === undefined && starType === undefined) {
+    await interaction.reply({
+      content: "No fields to update. Provide at least one option.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  await updateSystemFields(system.id, { name, resourceRating, starType });
+
+  const changes: string[] = [];
+  if (name !== undefined) changes.push(`Name → **${name}**`);
+  if (resourceRating !== undefined) changes.push(`Resource Rating → **${resourceRating}**`);
+  if (starType !== undefined) changes.push(`Star Type → **${starType}**`);
+
+  await interaction.reply({
+    content: `Updated system **${system.name}** (ID: ${system.id}):\n${changes.join("\n")}`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/** /admin unenroll <name_or_id> — remove guild claim from a system (elevated). */
+async function handleUnenroll(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (await rejectIfNotAdmin(interaction)) return;
+  if (await rejectIfNotElevated(interaction)) return;
+
+  const idOrName = interaction.options.getString("name_or_id", true);
+  const system = await getSystemByIdOrName(idOrName);
+
+  if (!system) {
+    await interaction.reply({
+      components: [errorContainer(`System "${idOrName}" not found.`)],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (!system.guildId) {
+    await interaction.reply({
+      content: `System **${system.name}** is not enrolled by any guild.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const guildId = system.guildId;
+  await unenrollSystem(system.id);
+
+  await interaction.reply({
+    content: `Unenrolled system **${system.name}** (ID: ${system.id}) from guild \`${guildId}\`. All guild connections removed.`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
 // ── Command definition ────────────────────────────────────────────────────────
 
 export const adminCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("admin")
     .setDescription("Admin commands")
+    // ── Existing subcommands ──
     .addSubcommand((sub) =>
       sub.setName("setup").setDescription("Set up your admin 2FA (sends QR code via DM)")
     )
@@ -227,12 +516,124 @@ export const adminCommand: Command = {
         .addUserOption((opt) =>
           opt.setName("user").setDescription("The player to unban").setRequired(true)
         )
+    )
+    // ── Dashboard read-only subcommands ──
+    .addSubcommand((sub) =>
+      sub
+        .setName("stats")
+        .setDescription("Game overview — systems, players, travelers, bans")
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("systems")
+        .setDescription("List enrolled/claimed systems")
+        .addIntegerOption((opt) =>
+          opt.setName("page").setDescription("Page number (default 1)").setMinValue(1)
+        )
+        .addStringOption((opt) =>
+          opt.setName("filter").setDescription("Filter systems by name")
+        )
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("system")
+        .setDescription("View a system in detail")
+        .addStringOption((opt) =>
+          opt
+            .setName("name_or_id")
+            .setDescription("System name or ID")
+            .setRequired(true)
+        )
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("players")
+        .setDescription("List players")
+        .addIntegerOption((opt) =>
+          opt.setName("page").setDescription("Page number (default 1)").setMinValue(1)
+        )
+        .addStringOption((opt) =>
+          opt.setName("search").setDescription("Search by name or user ID")
+        )
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("player")
+        .setDescription("View a player in detail")
+        .addUserOption((opt) =>
+          opt.setName("user").setDescription("The player to inspect").setRequired(true)
+        )
+    )
+    // ── Dashboard write subcommands (require elevation) ──
+    .addSubcommand((sub) =>
+      sub
+        .setName("edit-player")
+        .setDescription("Modify a player's stats (requires elevation)")
+        .addUserOption((opt) =>
+          opt.setName("user").setDescription("The player to edit").setRequired(true)
+        )
+        .addIntegerOption((opt) =>
+          opt.setName("credits").setDescription("Set credits")
+        )
+        .addIntegerOption((opt) =>
+          opt.setName("fuel").setDescription("Set fuel").setMinValue(0)
+        )
+        .addIntegerOption((opt) =>
+          opt.setName("fuel_capacity").setDescription("Set max fuel").setMinValue(1)
+        )
+        .addIntegerOption((opt) =>
+          opt.setName("cargo_capacity").setDescription("Set max cargo").setMinValue(1)
+        )
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("edit-system")
+        .setDescription("Modify a system's properties (requires elevation)")
+        .addStringOption((opt) =>
+          opt
+            .setName("name_or_id")
+            .setDescription("System name or ID")
+            .setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt.setName("name").setDescription("New system name")
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("resource_rating")
+            .setDescription("New resource rating (1-10)")
+            .setMinValue(1)
+            .setMaxValue(10)
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("star_type")
+            .setDescription("New star type")
+            .addChoices(
+              { name: "Yellow Dwarf", value: "yellow_dwarf" },
+              { name: "Red Giant", value: "red_giant" },
+              { name: "Blue Giant", value: "blue_giant" },
+              { name: "Neutron Star", value: "neutron_star" },
+              { name: "Black Hole", value: "black_hole" }
+            )
+        )
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("unenroll")
+        .setDescription("Remove guild claim from a system (requires elevation)")
+        .addStringOption((opt) =>
+          opt
+            .setName("name_or_id")
+            .setDescription("System name or ID")
+            .setRequired(true)
+        )
     ),
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    // setup is handled here; all others require admin check inside
     const sub = interaction.options.getSubcommand();
 
+    // Setup has its own admin check inline
     if (sub === "setup") {
       if (!isAdmin(interaction.user.id)) {
         await interaction.reply({ content: "Access denied.", flags: MessageFlags.Ephemeral });
@@ -242,10 +643,22 @@ export const adminCommand: Command = {
     }
 
     switch (sub) {
-      case "activate": return handleActivate(interaction);
-      case "status":   return handleStatus(interaction);
-      case "ban":      return handleBan(interaction);
-      case "unban":    return handleUnban(interaction);
+      // Auth
+      case "activate":    return handleActivate(interaction);
+      case "status":      return handleStatus(interaction);
+      // Moderation
+      case "ban":         return handleBan(interaction);
+      case "unban":       return handleUnban(interaction);
+      // Dashboard — read
+      case "stats":       return handleStats(interaction);
+      case "systems":     return handleSystems(interaction);
+      case "system":      return handleSystem(interaction);
+      case "players":     return handlePlayers(interaction);
+      case "player":      return handlePlayer(interaction);
+      // Dashboard — write (elevated)
+      case "edit-player":  return handleEditPlayer(interaction);
+      case "edit-system":  return handleEditSystem(interaction);
+      case "unenroll":     return handleUnenroll(interaction);
     }
   },
 };

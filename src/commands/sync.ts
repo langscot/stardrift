@@ -26,7 +26,7 @@ export const syncCommand: Command = {
     const guildRows = await getGuildSystems(interaction.guild.id);
     if (guildRows.length === 0) {
       await interaction.editReply(
-        "No systems registered on this server. Use `/setup-hub` or `/enroll` first."
+        "No systems registered on this server. Use `/setup-hub` or `/claim-system` first."
       );
       return;
     }

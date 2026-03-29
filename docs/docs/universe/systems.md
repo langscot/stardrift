@@ -30,7 +30,7 @@ Every system has a **resource rating from 1–10** based on its star type, plane
 Server administrators can claim an unenrolled system for their Discord server:
 
 ```
-/enroll
+/claim-system
 ```
 
 This registers the system, creates all the gameplay channels, and links the server to its galactic coordinates. The server becomes a live node in the shared galaxy — other players can warp in and interact.

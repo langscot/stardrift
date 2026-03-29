@@ -39,21 +39,21 @@ export function inventoryDisplay(data: InventoryDisplayData): ContainerBuilder[]
 
   // Cargo container
   const cargoLines = data.cargoItems.length > 0
-    ? data.cargoItems.map((i) => `\u2022 ${i.displayName}: **${i.quantity}**`).join("\n")
+    ? data.cargoItems.map((i) => `\u2022 ${i.displayName}: **\`${i.quantity}\`**`).join("\n")
     : "*Empty*";
 
   const cargoContainer = new ContainerBuilder()
     .setAccentColor(0xf0a030)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `\ud83d\udce6 **Ship Cargo** (${data.cargoUsed}/${data.cargoCapacity})\n${cargoLines}`
+        `\ud83d\udce6 **Ship Cargo** (\`${data.cargoUsed}/${data.cargoCapacity}\`)\n${cargoLines}`
       )
     );
   containers.push(cargoContainer);
 
   // Station storage container
   const stationLines = data.stationItems.length > 0
-    ? data.stationItems.map((i) => `\u2022 ${i.displayName}: **${i.quantity}**`).join("\n")
+    ? data.stationItems.map((i) => `\u2022 ${i.displayName}: **\`${i.quantity}\`**`).join("\n")
     : "*Empty*";
 
   const stationContainer = new ContainerBuilder()

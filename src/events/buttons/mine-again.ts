@@ -1,4 +1,4 @@
-import { ButtonInteraction, MessageFlags } from "discord.js";
+import { ButtonInteraction, MessageFlags, TextChannel } from "discord.js";
 import { db } from "../../db/index.js";
 import { players } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -9,36 +9,38 @@ import {
   miningCooldownDisplay,
   cargoFullDisplay,
 } from "../../ui/mining.js";
+import {
+  getTrackedMessageId,
+  trackMessage,
+  startCooldownCountdown,
+} from "../../systems/mining-tracker.js";
 
 /**
  * Handles the "Mine Again" button press.
- * customId format: mine_again:{channelType}:{referenceId}
- * Updates the existing ephemeral message in place.
+ * customId format: mine_again:{ownerUserId}:{channelType}:{referenceId}
+ *
+ * If the clicking user owns the message, update it in place.
+ * If a different user clicks, create/update their own tracked message instead.
  */
 export async function handleMineAgain(
   interaction: ButtonInteraction
 ): Promise<void> {
+  const parts = interaction.customId.split(":");
+  const ownerUserId = parts[1];
+  const userId = interaction.user.id;
+  const channel = interaction.channel as TextChannel;
+
   const player = await db.query.players.findFirst({
-    where: eq(players.userId, interaction.user.id),
+    where: eq(players.userId, userId),
   });
 
   if (!player) {
-    await interaction.update({
-      components: [
-        miningResultDisplay({
-          itemDisplayName: "Unknown",
-          quantity: 0,
-          cargoUsed: 0,
-          cargoCapacity: 1000,
-          showButtons: false,
-        }),
-      ],
-    });
+    await interaction.deferUpdate();
     return;
   }
 
   const result = await executeMining(
-    interaction.user.id,
+    userId,
     interaction.channelId,
     player.cargoCapacity,
     player.currentSystemId
@@ -46,6 +48,7 @@ export async function handleMineAgain(
 
   const ephemeralV2Flags = MessageFlags.IsComponentsV2 | 64;
 
+  // Cooldown / cargo-full / error — always ephemeral follow-up
   if (result.type === "cooldown") {
     await interaction.deferUpdate();
     await interaction.followUp({
@@ -67,6 +70,7 @@ export async function handleMineAgain(
     return;
   }
 
+  // Success — build display
   const displayData = {
     itemDisplayName: result.itemDisplayName,
     quantity: result.quantity,
@@ -74,22 +78,45 @@ export async function handleMineAgain(
     cargoCapacity: result.cargoCapacity,
     isProxy: result.isProxy,
     showButtons: true,
+    ownerUserId: userId,
     channelType: result.channelType,
     referenceId: result.referenceId,
   };
 
-  await interaction.update({
+  const messagePayload = {
     components: [miningResultDisplay({ ...displayData, cooldownSeconds: config.MINING_COOLDOWN_SECONDS })],
-  });
+    flags: MessageFlags.IsComponentsV2 as number,
+  };
 
-  setTimeout(async () => {
-    try {
-      await interaction.editReply({
-        components: [miningResultDisplay(displayData)],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    } catch {
-      // Message was deleted or token expired — ignore
+  let messageId: string;
+
+  if (userId === ownerUserId) {
+    // Owner clicking their own button — update in place
+    await interaction.update(messagePayload);
+    messageId = interaction.message.id;
+  } else {
+    // Different user — acknowledge the button, then send/edit their own message
+    await interaction.deferUpdate();
+
+    const existingId = getTrackedMessageId(interaction.channelId, userId);
+    if (existingId) {
+      try {
+        const existing = await channel.messages.fetch(existingId);
+        await existing.edit(messagePayload);
+        messageId = existingId;
+      } catch {
+        const msg = await channel.send(messagePayload);
+        messageId = msg.id;
+      }
+    } else {
+      const msg = await channel.send(messagePayload);
+      messageId = msg.id;
     }
-  }, config.MINING_COOLDOWN_SECONDS * 1000);
+  }
+
+  // Track and reset the 2-min inactivity timer
+  trackMessage(interaction.channelId, userId, messageId, channel);
+
+  // Tick down the cooldown label every second
+  startCooldownCountdown(channel, messageId, config.MINING_COOLDOWN_SECONDS, displayData);
 }

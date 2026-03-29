@@ -58,7 +58,7 @@ export function sellMenuDisplay(data: SellDisplayData): ContainerBuilder[] {
         new TextDisplayBuilder().setContent(
           `${indicator} **${price.displayName}**\n` +
           `Price: **${price.currentPrice}** cr/unit (${percentOfBase}% of base)\n` +
-          `You have: **${item.quantity}** \u2014 Total value: **${totalValue.toLocaleString()}** cr`
+          `You have: **\`${item.quantity}\`** \u2014 Total value: **\`${totalValue.toLocaleString()}\`** cr`
         )
       )
       .addActionRowComponents(

@@ -14,6 +14,8 @@ interface MiningDisplayData {
   isProxy?: boolean;
   /** Include Mine Again + Menu buttons */
   showButtons?: boolean;
+  /** Owner of this mining message (for per-user tracking) */
+  ownerUserId?: string;
   /** Used to construct the Mine Again button customId */
   channelType?: string;
   referenceId?: number | null;
@@ -31,9 +33,9 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
     .setAccentColor(data.isProxy ? 0xffaa00 : 0x00cc66)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `⛏️ **Mining Complete!**\n` +
-        `You mined **${data.quantity}x ${data.itemDisplayName}**\n\n` +
-        `📦 Cargo: ${data.cargoUsed}/${data.cargoCapacity} (${cargoPercent}%)` +
+        `⚡ **Mining Complete!**\n` +
+        `You mined **\`${data.quantity}x\` ${data.itemDisplayName}**\n\n` +
+        `📦 Cargo: \`${data.cargoUsed}/${data.cargoCapacity}\` (${cargoPercent}%)` +
         proxyWarning
       )
     );
@@ -42,8 +44,8 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
     const onCooldown = (data.cooldownSeconds ?? 0) > 0;
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`mine_again:${data.channelType}:${data.referenceId ?? "0"}`)
-        .setLabel(onCooldown ? `⏳ Ready in ${data.cooldownSeconds}s` : "⛏️ Mine Again")
+        .setCustomId(`mine_again:${data.ownerUserId}:${data.channelType}:${data.referenceId ?? "0"}`)
+        .setLabel(onCooldown ? `⏳ Ready in ${data.cooldownSeconds}s` : "⚡ Mine Again")
         .setStyle(ButtonStyle.Primary)
         .setDisabled(onCooldown),
       new ButtonBuilder()

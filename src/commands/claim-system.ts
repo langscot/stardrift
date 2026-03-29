@@ -14,9 +14,9 @@ import {
 import { createSystemChannels } from "../systems/enrollment.js";
 import type { Command } from "./types.js";
 
-export const enrollCommand: Command = {
+export const claimSystemCommand: Command = {
   data: new SlashCommandBuilder()
-    .setName("enroll")
+    .setName("claim-system")
     .setDescription("Claim a discovered system and add it to this server (admin only)")
     .addStringOption((opt) =>
       opt
@@ -44,7 +44,7 @@ export const enrollCommand: Command = {
       return;
     }
 
-    // Can't enroll the hub system — it's always shared
+    // Can't claim the hub system — it's always shared
     if (system.isHub) {
       await interaction.editReply(
         `**${system.name}** is the central hub and cannot be claimed. Use \`/setup-hub\` to access it.`
@@ -64,12 +64,12 @@ export const enrollCommand: Command = {
     const existing = await getGuildSystem(interaction.guild.id, system.id);
     if (existing && !existing.isProxy) {
       await interaction.editReply(
-        `**${system.name}** is already enrolled on this server.`
+        `**${system.name}** is already claimed on this server.`
       );
       return;
     }
 
-    // Enroll the system
+    // Claim the system
     await enrollSystem(system.id, interaction.guild.id, interaction.user.id);
 
     // Create channels
@@ -78,7 +78,7 @@ export const enrollCommand: Command = {
     } catch (err) {
       console.error("Channel creation error:", err);
       await interaction.editReply(
-        `**${system.name}** enrolled but channel creation failed. Check bot permissions (Manage Channels).`
+        `**${system.name}** claimed but channel creation failed. Check bot permissions (Manage Channels).`
       );
       return;
     }
@@ -93,7 +93,7 @@ export const enrollCommand: Command = {
     const emoji = starEmoji[system.starType] ?? "⭐";
 
     await interaction.editReply(
-      `${emoji} **${system.name}** has been enrolled on this server!\n\n` +
+      `${emoji} **${system.name}** has been claimed on this server!\n\n` +
       `Star: ${system.starType.replace(/_/g, " ")} · ` +
       `Resource rating: ${system.resourceRating}/10 · ` +
       `Coords: (${system.x.toFixed(0)}, ${system.y.toFixed(0)})\n\n` +

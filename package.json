@@ -10,7 +10,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/scripts/generate-galaxy.ts",
-    "deploy-commands": "tsx src/deploy-commands.ts"
+    "db:studio": "drizzle-kit studio",
+    "deploy-commands": "tsx src/deploy-commands.ts",
+    "docs:dev": "pnpm --dir docs start"
   },
   "keywords": [],
   "author": "",

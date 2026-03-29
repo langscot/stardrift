@@ -15,6 +15,10 @@ const envSchema = z.object({
 
   // Game tuning
   MINING_COOLDOWN_SECONDS: z.coerce.number().default(30),
+  MINING_COOLDOWN_COUNTDOWN: z
+    .enum(["true", "false", "1", "0"])
+    .default("true")
+    .transform((v) => v === "true" || v === "1"),
   FUEL_PER_LY: z.coerce.number().default(1),
   SECONDS_PER_LY: z.coerce.number().default(60),
   TRAVEL_CHECK_INTERVAL_MS: z.coerce.number().default(30_000),

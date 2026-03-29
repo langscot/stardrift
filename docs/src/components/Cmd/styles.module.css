@@ -1,0 +1,41 @@
+/* Inline copyable command */
+.cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  background: var(--sd-surface-raised);
+  border: 1px solid var(--sd-border);
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.cmd:hover {
+  border-color: var(--ifm-color-primary);
+  background: var(--sd-orange-dim);
+}
+
+.cmd.copied {
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+.icon {
+  display: inline-flex;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.cmd:hover .icon {
+  opacity: 1;
+}
+
+.cmd.copied .icon {
+  opacity: 1;
+}

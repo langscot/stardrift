@@ -39,7 +39,7 @@ export function mainMenuDisplay(ctx: MenuContext): ContainerBuilder[] {
         `${locationStr}\n\n` +
         `💰 Credits: **${creditStr}**\n` +
         `⛽ Fuel: **${ctx.fuel}/${ctx.fuelCapacity}** ${fuelBar}\n` +
-        `📦 Cargo: **${ctx.cargoUsed}/${ctx.cargoCapacity}** ${cargoBar}`
+        `📦 Cargo: **\`${ctx.cargoUsed}/${ctx.cargoCapacity}\`** ${cargoBar}`
       )
     );
 
@@ -67,7 +67,7 @@ export function mainMenuDisplay(ctx: MenuContext): ContainerBuilder[] {
     actionButtons.push(
       new ButtonBuilder()
         .setCustomId("menu_mine")
-        .setLabel("⛏️ Mine")
+        .setLabel("⚡ Mine")
         .setStyle(ButtonStyle.Primary)
     );
   }
@@ -108,11 +108,11 @@ export function menuCargoDisplay(
   systemName: string
 ): ContainerBuilder[] {
   const cargoLines = cargoItems.length > 0
-    ? cargoItems.map((i) => `• ${i.displayName}: **${i.quantity}**`).join("\n")
+    ? cargoItems.map((i) => `• ${i.displayName}: **\`${i.quantity}\`**`).join("\n")
     : "*Empty*";
 
   const stationLines = stationItems.length > 0
-    ? stationItems.map((i) => `• ${i.displayName}: **${i.quantity}**`).join("\n")
+    ? stationItems.map((i) => `• ${i.displayName}: **\`${i.quantity}\`**`).join("\n")
     : "*Empty*";
 
   const container = new ContainerBuilder()
@@ -120,7 +120,7 @@ export function menuCargoDisplay(
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## 📦 Cargo & Storage\n\n` +
-        `**Ship Cargo** (${cargoUsed}/${cargoCapacity})\n${cargoLines}\n\n` +
+        `**Ship Cargo** (\`${cargoUsed}/${cargoCapacity}\`)\n${cargoLines}\n\n` +
         `**Station Storage** (${systemName})\n${stationLines}`
       )
     )
@@ -234,7 +234,7 @@ export function menuStatsDisplay(
         `## 📊 Captain Stats — ${username}\n\n` +
         `💰 Credits: **${Number(credits).toLocaleString()}**\n` +
         `⛽ Fuel: **${fuel}/${fuelCapacity}**\n` +
-        `📦 Cargo: **${cargoUsed}/${cargoCapacity}**\n\n` +
+        `📦 Cargo: **\`${cargoUsed}/${cargoCapacity}\`**\n\n` +
         `**Current System**\n` +
         `📍 ${systemName}\n` +
         `${starEmoji(systemStarType)} ${formatStarType(systemStarType)} · Resource Rating: ${systemRating}/10`

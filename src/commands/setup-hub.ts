@@ -65,7 +65,7 @@ export const setupHubCommand: Command = {
     await interaction.editReply(
       `**${hub.name}**${label} channels created! 🚀\n\n` +
       `New players who join this server can start playing Stardrift immediately.\n` +
-      `To claim your own star system, explore the galaxy and run \`/enroll\` with a discovered system.`
+      `To claim your own star system, explore the galaxy and run \`/claim-system\` with a discovered system.`
     );
   },
 };
