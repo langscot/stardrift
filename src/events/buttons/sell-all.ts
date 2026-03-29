@@ -1,0 +1,92 @@
+import {
+  ButtonInteraction,
+  MessageFlags,
+  ContainerBuilder,
+  TextDisplayBuilder,
+} from "discord.js";
+import { getCargoItems, removeFromCargo } from "../../db/queries/inventory.js";
+import { recordNpcSale } from "../../db/queries/market.js";
+import { addCredits } from "../../db/queries/players.js";
+import { isProxyInGuild } from "../../db/queries/systems.js";
+import { db } from "../../db/index.js";
+import { players, systemChannels, itemTypes } from "../../db/schema.js";
+import { eq } from "drizzle-orm";
+import { getTravelState } from "../../redis/travel.js";
+import { PROXY_SELL_MULTIPLIER } from "../../middleware/location-guard.js";
+
+export async function handleSellAll(interaction: ButtonInteraction): Promise<void> {
+  const userId = interaction.user.id;
+
+  const travelState = await getTravelState(userId);
+  if (travelState) {
+    await interaction.reply({ content: "You can't sell while traveling.", flags: 64 });
+    return;
+  }
+
+  const player = await db.query.players.findFirst({
+    where: eq(players.userId, userId),
+  });
+  if (!player?.currentSystemId) {
+    await interaction.reply({ content: "You're not docked at a system.", flags: 64 });
+    return;
+  }
+
+  const channel = await db.query.systemChannels.findFirst({
+    where: eq(systemChannels.channelId, interaction.channelId),
+  });
+  if (!channel || channel.channelType !== "market") {
+    await interaction.reply({ content: "You can only sell at a station market.", flags: 64 });
+    return;
+  }
+
+  const proxy = channel.guildId
+    ? await isProxyInGuild(channel.guildId, channel.systemId)
+    : false;
+
+  const cargo = await getCargoItems(userId);
+  if (cargo.length === 0) {
+    await interaction.reply({ content: "Your cargo is already empty.", flags: 64 });
+    return;
+  }
+
+  // Sell every item in cargo
+  const allItemTypes = await db.query.itemTypes.findMany();
+  const itemTypeMap = new Map(allItemTypes.map((it) => [it.key, it]));
+
+  let totalCredits = 0;
+  const lines: string[] = [];
+
+  for (const item of cargo) {
+    const removed = await removeFromCargo(userId, item.itemType, item.quantity);
+    if (!removed) continue;
+
+    let credits = await recordNpcSale(player.currentSystemId, item.itemType, item.quantity);
+    if (proxy) credits = Math.floor(credits * PROXY_SELL_MULTIPLIER);
+
+    totalCredits += credits;
+    const displayName = itemTypeMap.get(item.itemType)?.displayName ?? item.itemType;
+    lines.push(`• ${item.quantity}x ${displayName} — **${credits.toLocaleString()} cr**`);
+  }
+
+  await addCredits(userId, totalCredits);
+
+  const proxyNote = proxy
+    ? `\n\n📡 *Proxy market — 20% fee applied.*`
+    : "";
+
+  const container = new ContainerBuilder()
+    .setAccentColor(proxy ? 0xffaa00 : 0x00cc66)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `💰 **Sold Everything!**\n\n` +
+        lines.join("\n") +
+        `\n\n**Total earned: ${totalCredits.toLocaleString()} credits**` +
+        proxyNote
+      )
+    );
+
+  await interaction.reply({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2,
+  });
+}

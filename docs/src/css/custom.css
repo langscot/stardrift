@@ -1,0 +1,23 @@
+/* Space-themed color palette */
+:root {
+  --ifm-color-primary: #4f8ef7;
+  --ifm-color-primary-dark: #2e77f5;
+  --ifm-color-primary-darker: #1d6df4;
+  --ifm-color-primary-darkest: #0a57d8;
+  --ifm-color-primary-light: #70a5f9;
+  --ifm-color-primary-lighter: #81aff9;
+  --ifm-color-primary-lightest: #b3ccfc;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #6ba3ff;
+  --ifm-color-primary-dark: #4a8fff;
+  --ifm-color-primary-darker: #3984ff;
+  --ifm-color-primary-darkest: #0763ff;
+  --ifm-color-primary-light: #8cb7ff;
+  --ifm-color-primary-lighter: #9dc2ff;
+  --ifm-color-primary-lightest: #cfdeff;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
