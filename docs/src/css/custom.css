@@ -281,6 +281,7 @@ pre {
   border: 1px solid var(--sd-border);
   border-left: 3px solid var(--ifm-color-primary);
   border-radius: 0 !important;
+  padding: 1rem 1.25rem !important;
 }
 
 pre code {
