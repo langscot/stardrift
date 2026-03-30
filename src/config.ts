@@ -41,6 +41,9 @@ const envSchema = z.object({
         .map((id) => id.trim())
         .filter(Boolean)
     ),
+
+  // Environment — "test" adds [TEST] prefix to channel categories and embeds
+  BOT_ENV: z.enum(["live", "test"]).default("live"),
 });
 
 function loadConfig() {

@@ -7,6 +7,10 @@ import {
 import { db } from "../db/index.js";
 import { systems, planets, asteroidBelts, systemChannels } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
+import { config } from "../config.js";
+
+/** Prefix a channel/category name with [TEST] when running in test mode */
+const t = (name: string) => config.BOT_ENV === "test" ? `[TEST] ${name}` : name;
 
 interface ChannelMapping {
   channelType: string;
@@ -40,8 +44,8 @@ export async function createSystemChannels(
 
   // Create category — proxy systems get a 📡 prefix to signal their status
   const categoryName = isProxy
-    ? `\ud83d\udce1 ${system.name} [PROXY]`
-    : `\u2b50 ${system.name}`;
+    ? t(`\ud83d\udce1 ${system.name} [PROXY]`)
+    : t(`\u2b50 ${system.name}`);
   const category = await guild.channels.create({
     name: categoryName,
     type: ChannelType.GuildCategory,
@@ -285,8 +289,8 @@ export async function syncSystemChannels(
   // If no category exists, create one (shouldn't happen normally)
   if (!categoryId) {
     const categoryName = isProxy
-      ? `\ud83d\udce1 ${system.name} [PROXY]`
-      : `\u2b50 ${system.name}`;
+      ? t(`\ud83d\udce1 ${system.name} [PROXY]`)
+      : t(`\u2b50 ${system.name}`);
     const category = await guild.channels.create({
       name: categoryName,
       type: ChannelType.GuildCategory,
