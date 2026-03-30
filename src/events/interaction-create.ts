@@ -14,6 +14,9 @@ import { handleTravelConfirm } from "./buttons/travel-confirm.js";
 import { handleMineAgain } from "./buttons/mine-again.js";
 import { handleMenuNav } from "./buttons/menu-nav.js";
 
+// Commands that run before a player exists (setup/admin — skip ensurePlayer)
+const SKIP_ENSURE_PLAYER = new Set(["setup-hub", "admin", "sync"]);
+
 const MENU_ACTIONS = new Set([
   "menu_open",
   "menu_home",
@@ -46,7 +49,9 @@ export async function handleInteractionCreate(
         return;
       }
 
-      await ensurePlayer(interaction);
+      if (!SKIP_ENSURE_PLAYER.has(interaction.commandName)) {
+        await ensurePlayer(interaction);
+      }
       await command.execute(interaction);
     } catch (error) {
       console.error(`Error executing /${interaction.commandName}:`, error);
