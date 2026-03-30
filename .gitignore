@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .env
+.env.live
+.env.test
 *.js.map
 *.d.ts
 !drizzle.config.ts

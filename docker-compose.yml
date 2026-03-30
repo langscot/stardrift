@@ -1,6 +1,6 @@
-services:
+version: '3.9'
 
-  # ─── PostgreSQL ───────────────────────────────────────────────────────────
+services:
   postgres:
     image: postgres:16-alpine
     container_name: stardrift-postgres
@@ -8,18 +8,18 @@ services:
     environment:
       POSTGRES_USER: stellar
       POSTGRES_PASSWORD: stellar_password
-      POSTGRES_DB: stardrift
+      POSTGRES_DB: stardrift_live
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stellar -d stardrift"]
+      test: ["CMD-SHELL", "pg_isready -U stellar"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  # ─── Redis ───────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: stardrift-redis
@@ -28,30 +28,16 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  # ─── Bot ─────────────────────────────────────────────────────────────────
-  bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: stardrift-bot
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgresql://stellar:stellar_password@postgres:5432/stardrift
-      REDIS_URL: redis://redis:6379
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+networks:
+  default:
+    name: stardrift-network
 
 volumes:
   postgres_data:
