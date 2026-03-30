@@ -6,3 +6,4 @@ dist/
 *.js.map
 *.d.ts
 !drizzle.config.ts
+.pnpm-store
