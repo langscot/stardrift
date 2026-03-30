@@ -68,6 +68,16 @@ All Stardrift interactions use Discord slash commands. Type `/` in any channel t
 
 </SlashCommand>
 
+<SlashCommand name="prospect" description="Survey the resources of your current star system.">
+
+- Only visible to you (ephemeral reply)
+- **In a planet channel** — shows that planet's ore yields with a select menu to navigate to other bodies
+- **In an asteroid belt channel** — shows that belt's richness and ore yields with navigation
+- **Anywhere else** — shows a full system report (all planets + belts)
+- Use the **← System Overview** button or the dropdown to jump between bodies
+
+</SlashCommand>
+
 ---
 
 ## Admin Commands
@@ -118,3 +128,5 @@ Many commands produce interactive buttons. The common ones:
 | **Sell [Item]** | <Cmd>/sell</Cmd> | Sells a specific item stack |
 | **Confirm Departure** | <Cmd>/travel</Cmd> | Starts a jump to the selected system |
 | Menu buttons | <Cmd>/menu</Cmd> | Navigate to game sections |
+| **← System Overview** | <Cmd>/prospect</Cmd> | Back to the body select menu |
+| Body select menu | <Cmd>/prospect</Cmd> | Switch between planets, belts, or full report |
