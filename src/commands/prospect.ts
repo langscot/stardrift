@@ -7,47 +7,14 @@ import { eq } from "drizzle-orm";
 import type { Command } from "./types.js";
 import { ensurePlayer } from "../middleware/player-ensure.js";
 import { db } from "../db/index.js";
-import { systems, planets, asteroidBelts } from "../db/schema.js";
-
-// Ore tables mirrored from mining.ts — used to show what a location yields
-const PLANET_ORES: Record<string, string[]> = {
-  rocky:    ["Iron Ore", "Copper Ore", "Silicon Ore", "Titanium Ore"],
-  scorched: ["Iron Ore", "Titanium Ore", "Platinum Ore", "Crystal Ore"],
-  temperate:["Iron Ore", "Copper Ore", "Silicon Ore"],
-  gas_giant:["Helium Gas", "Hydrogen Gas"],
-  ice:      ["Ice Crystal", "Silicon Ore", "Hydrogen Gas"],
-  barren:   ["Iron Ore", "Silicon Ore", "Copper Ore"],
-  volcanic: ["Titanium Ore", "Platinum Ore", "Crystal Ore", "Iron Ore", "Dark Matter"],
-  ocean:    [],
-};
-
-const BELT_ORES = ["Iron Ore", "Copper Ore", "Silicon Ore", "Titanium Ore", "Platinum Ore"];
-
-const PLANET_EMOJI: Record<string, string> = {
-  rocky: "🪨", scorched: "🔥", temperate: "🌿", gas_giant: "🌀",
-  ice: "❄️", barren: "⬛", volcanic: "🌋", ocean: "🌊",
-};
-
-function richnessBar(richness: number): string {
-  // richness 1-10 → 10-char bar
-  const filled = Math.round(richness);
-  return "█".repeat(filled) + "░".repeat(10 - filled);
-}
-
-function richnessLabel(richness: number): string {
-  if (richness >= 8) return "Very Rich";
-  if (richness >= 6) return "Rich";
-  if (richness >= 4) return "Moderate";
-  if (richness >= 2) return "Sparse";
-  return "Trace";
-}
-
-function starEmoji(starType: string): string {
-  const map: Record<string, string> = {
-    O: "🔵", B: "🔷", A: "⚪", F: "🟡", G: "☀️", K: "🟠", M: "🔴",
-  };
-  return map[starType.toUpperCase()] ?? "⭐";
-}
+import { systems, planets, asteroidBelts, systemChannels } from "../db/schema.js";
+import {
+  buildFullReport,
+  buildPlanetReport,
+  buildBeltReport,
+  overviewButton,
+  bodySelectMenu,
+} from "../ui/prospect.js";
 
 export const prospectCommand: Command = {
   data: new SlashCommandBuilder()
@@ -64,6 +31,11 @@ export const prospectCommand: Command = {
       return;
     }
 
+    // Check if we're inside a specific planet/belt channel
+    const channel = await db.query.systemChannels.findFirst({
+      where: eq(systemChannels.channelId, interaction.channelId),
+    });
+
     const system = await db.query.systems.findFirst({
       where: eq(systems.id, player.currentSystemId),
     });
@@ -73,57 +45,50 @@ export const prospectCommand: Command = {
       return;
     }
 
-    const systemPlanets = await db
+    const sysPlanets = await db
       .select()
       .from(planets)
       .where(eq(planets.systemId, system.id))
       .orderBy(planets.slot);
 
-    const systemBelts = await db
+    const sysBelts = await db
       .select()
       .from(asteroidBelts)
       .where(eq(asteroidBelts.systemId, system.id));
 
-    const lines: string[] = [];
-
-    // Header
-    lines.push(`## 📡 Prospect Report`);
-    lines.push(`${starEmoji(system.starType)} **${system.name}** · ${system.starType}-type Star`);
-    lines.push(`> Resource Rating  \`${richnessBar(system.resourceRating)}\` ${system.resourceRating}/10`);
-
-    // Planets
-    if (systemPlanets.length > 0) {
-      lines.push(`\n**🪐 Planets**`);
-      for (const planet of systemPlanets) {
-        const emoji = PLANET_EMOJI[planet.planetType] ?? "🪐";
-        const ores = PLANET_ORES[planet.planetType] ?? [];
-        const label = planet.planetType.replace(/_/g, " ");
-        lines.push(`${emoji} **${planet.name}** *(${label})*`);
-        if (ores.length === 0) {
-          lines.push(`> No extractable resources`);
-        } else {
-          lines.push(`> ${ores.join(" · ")}`);
-        }
+    // In a specific planet channel — show just that planet + nav
+    if (channel?.channelType === "planet" && channel.referenceId) {
+      const planet = sysPlanets.find(p => p.id === channel.referenceId);
+      if (planet) {
+        await interaction.editReply({
+          content: buildPlanetReport(planet, system.name),
+          components: [
+            overviewButton(system.id),
+            bodySelectMenu(system.id, sysPlanets, sysBelts),
+          ],
+        });
+        return;
       }
     }
 
-    // Asteroid belts
-    if (systemBelts.length > 0) {
-      lines.push(`\n**🪨 Asteroid Belts**`);
-      for (const belt of systemBelts) {
-        const richness10 = Math.min(10, Math.round(belt.richness / 10));
-        lines.push(`🪨 **${belt.name}**`);
-        lines.push(`> \`${richnessBar(richness10)}\` ${richnessLabel(richness10)}`);
-        lines.push(`> ${BELT_ORES.join(" · ")}`);
+    // In a specific asteroid belt channel — show just that belt + nav
+    if (channel?.channelType === "asteroid_belt" && channel.referenceId) {
+      const belt = sysBelts.find(b => b.id === channel.referenceId);
+      if (belt) {
+        await interaction.editReply({
+          content: buildBeltReport(belt, system.name),
+          components: [
+            overviewButton(system.id),
+            bodySelectMenu(system.id, sysPlanets, sysBelts),
+          ],
+        });
+        return;
       }
     }
 
-    if (systemPlanets.length === 0 && systemBelts.length === 0) {
-      lines.push(`\n*No mineable bodies detected in this system.*`);
-    }
-
-    lines.push(`\n-# Only you can see this`);
-
-    await interaction.editReply(lines.join("\n"));
+    // Default — full system report (no buttons needed)
+    await interaction.editReply({
+      content: buildFullReport(system, sysPlanets, sysBelts),
+    });
   },
 };

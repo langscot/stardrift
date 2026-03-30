@@ -13,6 +13,11 @@ import { handleSellAll } from "./buttons/sell-all.js";
 import { handleTravelConfirm } from "./buttons/travel-confirm.js";
 import { handleMineAgain } from "./buttons/mine-again.js";
 import { handleMenuNav } from "./buttons/menu-nav.js";
+import {
+  handleProspectOverview,
+  handleProspectBody,
+  handleProspectSelect,
+} from "./buttons/prospect-nav.js";
 
 // Commands that run before a player exists (setup/admin — skip ensurePlayer)
 const SKIP_ENSURE_PLAYER = new Set(["setup-hub", "admin", "sync"]);
@@ -87,6 +92,14 @@ export async function handleInteractionCreate(
           await handleMineAgain(interaction);
           break;
 
+        case "prospect_overview":
+          await handleProspectOverview(interaction, parseInt(args[0], 10));
+          break;
+
+        case "prospect_body":
+          await handleProspectBody(interaction, args[0], parseInt(args[1], 10));
+          break;
+
         case "admin_totp_verify":
           if (isAdmin(interaction.user.id)) {
             await handleVerifyButton(interaction);
@@ -113,6 +126,22 @@ export async function handleInteractionCreate(
         await interaction
           .reply({ content: "Something went wrong.", flags: 64 })
           .catch(() => {});
+      }
+    }
+    return;
+  }
+
+  // Handle select menu interactions
+  if (interaction.isStringSelectMenu()) {
+    try {
+      const [action, ...args] = interaction.customId.split(":");
+      if (action === "prospect_select") {
+        await handleProspectSelect(interaction, parseInt(args[0], 10));
+      }
+    } catch (error) {
+      console.error("Error handling select menu:", error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: "Something went wrong.", flags: 64 }).catch(() => {});
       }
     }
     return;
