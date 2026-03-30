@@ -84,54 +84,45 @@ export const prospectCommand: Command = {
       .from(asteroidBelts)
       .where(eq(asteroidBelts.systemId, system.id));
 
-    const sep  = "═".repeat(32);
-    const dash = "─".repeat(32);
-
     const lines: string[] = [];
 
-    lines.push(`\`\`\``);
-    lines.push(sep);
-    lines.push(`  📡 PROSPECT REPORT`);
-    lines.push(`  ${starEmoji(system.starType)} ${system.name} · ${system.starType}-type Star`);
-    lines.push(`  Resource Rating: ${richnessBar(system.resourceRating)} ${system.resourceRating}/10`);
-    lines.push(sep);
+    // Header
+    lines.push(`## 📡 Prospect Report`);
+    lines.push(`${starEmoji(system.starType)} **${system.name}** · ${system.starType}-type Star`);
+    lines.push(`> Resource Rating  \`${richnessBar(system.resourceRating)}\` ${system.resourceRating}/10`);
 
+    // Planets
     if (systemPlanets.length > 0) {
-      lines.push(`  PLANETS`);
-      lines.push(dash);
+      lines.push(`\n**🪐 Planets**`);
       for (const planet of systemPlanets) {
         const emoji = PLANET_EMOJI[planet.planetType] ?? "🪐";
         const ores = PLANET_ORES[planet.planetType] ?? [];
-        lines.push(`  ${emoji} ${planet.name} (${planet.planetType.replace("_", " ")})`);
+        const label = planet.planetType.replace(/_/g, " ");
+        lines.push(`${emoji} **${planet.name}** *(${label})*`);
         if (ores.length === 0) {
-          lines.push(`     No extractable resources`);
+          lines.push(`> No extractable resources`);
         } else {
-          lines.push(`     Yields: ${ores.join(", ")}`);
+          lines.push(`> ${ores.join(" · ")}`);
         }
       }
-      lines.push(dash);
     }
 
+    // Asteroid belts
     if (systemBelts.length > 0) {
-      lines.push(`  ASTEROID BELTS`);
-      lines.push(dash);
+      lines.push(`\n**🪨 Asteroid Belts**`);
       for (const belt of systemBelts) {
         const richness10 = Math.min(10, Math.round(belt.richness / 10));
-        lines.push(`  🪨 ${belt.name}`);
-        lines.push(`     ${richnessBar(richness10)} ${richnessLabel(richness10)}`);
-        lines.push(`     Yields: ${BELT_ORES.join(", ")}`);
+        lines.push(`🪨 **${belt.name}**`);
+        lines.push(`> \`${richnessBar(richness10)}\` ${richnessLabel(richness10)}`);
+        lines.push(`> ${BELT_ORES.join(" · ")}`);
       }
-      lines.push(dash);
     }
 
     if (systemPlanets.length === 0 && systemBelts.length === 0) {
-      lines.push(`  No mineable bodies detected.`);
-      lines.push(dash);
+      lines.push(`\n*No mineable bodies detected in this system.*`);
     }
 
-    lines.push(`  Only you can see this report.`);
-    lines.push(sep);
-    lines.push(`\`\`\``);
+    lines.push(`\n-# Only you can see this`);
 
     await interaction.editReply(lines.join("\n"));
   },
