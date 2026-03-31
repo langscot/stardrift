@@ -5,55 +5,19 @@
 
 // ─── Name Generation ─────────────────────────────────────────────
 
-const PREFIXES = [
-  "Al", "Ar", "Ax", "Be", "Bor", "Cal", "Cen", "Cor", "Cy", "Da",
-  "Del", "Dra", "El", "En", "Eth", "Fa", "Fen", "Gal", "Gor", "Hel",
-  "Hy", "Ix", "Ja", "Kal", "Ke", "Kry", "Lar", "Lun", "Ly", "Mal",
-  "Mar", "Mir", "Neb", "Nex", "No", "Ob", "Or", "Pal", "Per", "Pho",
-  "Pro", "Pyr", "Qua", "Ra", "Ren", "Rig", "Ro", "Sar", "Sel", "Si",
-  "Sol", "Sor", "Stel", "Sy", "Tar", "Tel", "Tho", "Tri", "Ul", "Val",
-  "Var", "Vel", "Vin", "Vor", "Wyr", "Xa", "Xen", "Yor", "Za", "Zel",
-  "Zor", "Zy", "An", "Ash", "Bri", "Cra", "Dor", "Ey", "Fre", "Gri",
-];
-
-const SUFFIXES = [
-  "ara", "ath", "ax", "eon", "eth", "ia", "ica", "iel", "ium", "ion",
-  "is", "ix", "on", "or", "os", "ox", "tus", "um", "una", "ura",
-  "us", "yx", "zen", "zon", "tar", "nar", "ris", "las", "mos", "nos",
-  "pas", "ras", "vas", "dan", "fan", "han", "kan", "lan", "man", "ran",
-  "heim", "burg", "gate", "hold", "mark", "stead", "vale", "ward", "well", "wick",
-  "arn", "eld", "ind", "ord", "und", "ent", "int", "ost", "ult", "orn",
-  "ake", "ine", "ode", "ule", "ane", "ire", "ose", "ure", "ive", "ade",
-  "yx", "ex", "ox", "az", "ez", "iz", "oz", "uz", "iq", "oq",
-];
-
-const MIDDLE = [
-  "to", "ri", "na", "lo", "ma", "ve", "se", "te", "de", "ne",
-  "li", "ra", "si", "ta", "ka", "mi", "no", "pa", "ro", "vi",
-];
-
 export function generateSystemName(usedNames: Set<string>): string {
   let attempts = 0;
   while (attempts < 100) {
-    const prefix = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
-    const suffix = SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)];
-
-    // 40% chance of adding a middle syllable
-    const useMiddle = Math.random() < 0.4;
-    const middle = useMiddle
-      ? MIDDLE[Math.floor(Math.random() * MIDDLE.length)]
-      : "";
-
-    const name = prefix + middle + suffix;
-
-    if (!usedNames.has(name) && name.length >= 4 && name.length <= 14) {
+    const num = 1000 + Math.floor(Math.random() * 999000); // 1000–999999
+    const name = `SD ${num}`;
+    if (!usedNames.has(name)) {
       usedNames.add(name);
       return name;
     }
     attempts++;
   }
-  // Fallback: add a number
-  const fallback = `System-${Math.floor(Math.random() * 999999)}`;
+  // Fallback with higher range
+  const fallback = `SD ${1000000 + Math.floor(Math.random() * 9000000)}`;
   usedNames.add(fallback);
   return fallback;
 }
@@ -266,7 +230,7 @@ export function generateBelts(
     const bonus = resourceRating > 6 ? 1 : 0;
     const richness = Math.min(5, baseRichness + bonus);
     belts.push({
-      name: `${systemName} Belt${count > 1 ? ` ${i + 1}` : ""}`,
+      name: `${systemName} Belt${count > 1 ? ` ${ROMAN_NUMERALS[i]}` : ""}`,
       richness,
     });
   }
