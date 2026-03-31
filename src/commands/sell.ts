@@ -13,13 +13,12 @@ import { sellMenuDisplay } from "../ui/market.js";
 export const sellCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("sell")
-    .setDescription("View prices and sell items at the station market"),
+    .setDescription("View prices and sell items"),
 
   requiresLocation: true,
-  requiresChannel: ["market"],
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const loc = await checkLocation(interaction, ["market"]);
+    const loc = await checkLocation(interaction);
     if (!loc) return;
 
     // Get player's cargo

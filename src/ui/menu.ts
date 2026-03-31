@@ -69,22 +69,16 @@ export function mainMenuDisplay(ctx: MenuContext): ContainerBuilder[] {
         .setStyle(ButtonStyle.Primary)
     );
   }
-  if (ctx.channelType === "market") {
-    actionButtons.push(
-      new ButtonBuilder()
-        .setCustomId("menu_sell")
-        .setLabel("💰 Sell")
-        .setStyle(ButtonStyle.Success)
-    );
-  }
-  if (ctx.channelType === "travel_hub") {
-    actionButtons.push(
-      new ButtonBuilder()
-        .setCustomId("menu_travel")
-        .setLabel("🚀 Travel")
-        .setStyle(ButtonStyle.Primary)
-    );
-  }
+  actionButtons.push(
+    new ButtonBuilder()
+      .setCustomId("menu_sell")
+      .setLabel("💰 Sell")
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId("menu_travel")
+      .setLabel("🚀 Travel")
+      .setStyle(ButtonStyle.Primary)
+  );
 
   if (actionButtons.length > 0) {
     dashboard.addActionRowComponents(

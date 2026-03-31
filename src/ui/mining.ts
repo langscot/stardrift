@@ -43,10 +43,11 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
     : "";
 
   const flavor = data.flavorText ?? pickMiningFlavor(data.ownerUserId);
-  const itemLines = data.items
+  const itemLines = [...data.items]
+    .sort((a, b) => ((b.basePrice ?? 0) * b.quantity) - ((a.basePrice ?? 0) * a.quantity))
     .map(i => {
-      const price = i.basePrice != null ? ` \`${i.basePrice * i.quantity}¢\`` : "";
-      return `${i.emoji ?? "✦"} **\`${i.quantity}x\`** ${i.itemDisplayName}${price}`;
+      const price = i.basePrice != null ? ` — ${(i.basePrice * i.quantity).toLocaleString()}¢` : "";
+      return `${i.emoji ?? "✦"} **${i.quantity}x** ${i.itemDisplayName}${price}`;
     })
     .join("\n");
 
@@ -131,7 +132,7 @@ export function cargoFullDisplay(): ContainerBuilder {
     .setAccentColor(0xff6600)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `📦 **Cargo is full!** Sell items at the station market or transfer to station storage.`
+        `📦 **Cargo is full!** Use \`/sell\` to sell items or transfer to station storage.`
       )
     )
     .addActionRowComponents(

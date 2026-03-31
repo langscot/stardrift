@@ -21,7 +21,7 @@ export interface MinedItem {
 }
 
 /** Temporary emoji map until emoji column is added to item_types table */
-const ITEM_EMOJI: Record<string, string> = {
+export const ITEM_EMOJI: Record<string, string> = {
   iron_ore: "<:iron_ore:1488250230737600622>",
   copper_ore: "<:copper_ore:1488250220969070713>",
   silicon_ore: "<:silicon_ore:1488250233178816622>",

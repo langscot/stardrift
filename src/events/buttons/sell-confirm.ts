@@ -3,6 +3,9 @@ import {
   MessageFlags,
   ContainerBuilder,
   TextDisplayBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 import { removeFromCargo } from "../../db/queries/inventory.js";
 import { recordNpcSale } from "../../db/queries/market.js";
@@ -13,6 +16,8 @@ import { players, systemChannels, itemTypes } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getTravelState } from "../../redis/travel.js";
 import { PROXY_SELL_MULTIPLIER } from "../../middleware/location-guard.js";
+import { ITEM_EMOJI } from "../../systems/mining-action.js";
+import { pickSellFlavor } from "../../ui/market.js";
 
 export async function handleSellConfirm(
   interaction: ButtonInteraction,
@@ -53,13 +58,13 @@ export async function handleSellConfirm(
     return;
   }
 
-  // Check the channel belongs to a market
+  // Check the channel belongs to a system
   const channel = await db.query.systemChannels.findFirst({
     where: eq(systemChannels.channelId, interaction.channelId),
   });
-  if (!channel || channel.channelType !== "market") {
+  if (!channel) {
     await interaction.reply({
-      content: "You can only sell at a station market.",
+      content: "This channel is not a game channel.",
       flags: 64,
     });
     return;
@@ -104,13 +109,24 @@ export async function handleSellConfirm(
     ? `\n\ud83d\udce1 *Proxy market — 20% fee applied. Visit the system's home server for full rates.*`
     : "";
 
+  const emoji = ITEM_EMOJI[itemType] ?? "✦";
+  const flavor = pickSellFlavor(userId);
+
   const container = new ContainerBuilder()
     .setAccentColor(proxy ? 0xffaa00 : 0x00cc66)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `\ud83d\udcb0 **Sale Complete!**\n` +
-        `Sold **${quantity}x ${item?.displayName ?? itemType}** for **${creditsEarned.toLocaleString()}¢**` +
+        `\ud83d\udcb0 ${flavor}\n\n` +
+        `${emoji} Sold **${quantity}x ${item?.displayName ?? itemType}** for **${creditsEarned.toLocaleString()}¢**` +
         proxyNote
+      )
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("menu_open")
+          .setLabel("\ud83c\udfe0 Menu")
+          .setStyle(ButtonStyle.Secondary)
       )
     );
 

@@ -3,6 +3,9 @@ import {
   MessageFlags,
   ContainerBuilder,
   TextDisplayBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 import { getCargoItems, removeFromCargo } from "../../db/queries/inventory.js";
 import { recordNpcSale } from "../../db/queries/market.js";
@@ -13,6 +16,9 @@ import { players, systemChannels } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getTravelState } from "../../redis/travel.js";
 import { PROXY_SELL_MULTIPLIER } from "../../middleware/location-guard.js";
+import { ITEM_EMOJI } from "../../systems/mining-action.js";
+import { pickSellFlavor } from "../../ui/market.js";
+import { stopCountdown } from "../../systems/mining-tracker.js";
 
 /**
  * Quick-sell button from the mining screen.
@@ -64,7 +70,8 @@ export async function handleQuickSell(interaction: ButtonInteraction): Promise<v
 
     totalCredits += credits;
     const displayName = itemTypeMap.get(item.itemType)?.displayName ?? item.itemType;
-    lines.push(`• ${item.quantity}x ${displayName} — **${credits.toLocaleString()}¢**`);
+    const emoji = ITEM_EMOJI[item.itemType] ?? "✦";
+    lines.push(`${emoji} **${item.quantity}x** ${displayName} — **${credits.toLocaleString()}¢**`);
   }
 
   await addCredits(userId, totalCredits);
@@ -73,19 +80,40 @@ export async function handleQuickSell(interaction: ButtonInteraction): Promise<v
     ? `\n\n📡 *Proxy market — 20% fee applied.*`
     : "";
 
+  const flavor = pickSellFlavor(userId);
+
+  const parts = interaction.customId.split(":");
+  const ownerUserId = parts[1];
+
   const container = new ContainerBuilder()
     .setAccentColor(proxy ? 0xffaa00 : 0x00cc66)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `💰 **Sold Everything!**\n\n` +
+        `💰 ${flavor}\n\n` +
         lines.join("\n") +
         `\n\n**Total earned: ${totalCredits.toLocaleString()}¢**` +
         proxyNote
       )
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`mine_again:${ownerUserId}:planet:0`)
+          .setLabel("⚡ Mine Again")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("menu_open")
+          .setLabel("🏠 Menu")
+          .setStyle(ButtonStyle.Secondary)
+      )
     );
 
-  await interaction.reply({
+  // Stop the mining cooldown countdown so it doesn't overwrite this message
+  stopCountdown(interaction.message.id);
+
+  // Replace the mine message in place
+  await interaction.update({
     components: [container],
-    flags: MessageFlags.IsComponentsV2,
+    flags: MessageFlags.IsComponentsV2 as number,
   });
 }

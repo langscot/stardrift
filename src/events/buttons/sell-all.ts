@@ -3,6 +3,9 @@ import {
   MessageFlags,
   ContainerBuilder,
   TextDisplayBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 import { getCargoItems, removeFromCargo } from "../../db/queries/inventory.js";
 import { recordNpcSale } from "../../db/queries/market.js";
@@ -13,6 +16,8 @@ import { players, systemChannels, itemTypes } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getTravelState } from "../../redis/travel.js";
 import { PROXY_SELL_MULTIPLIER } from "../../middleware/location-guard.js";
+import { ITEM_EMOJI } from "../../systems/mining-action.js";
+import { pickSellFlavor } from "../../ui/market.js";
 
 export async function handleSellAll(interaction: ButtonInteraction): Promise<void> {
   const userId = interaction.user.id;
@@ -34,8 +39,8 @@ export async function handleSellAll(interaction: ButtonInteraction): Promise<voi
   const channel = await db.query.systemChannels.findFirst({
     where: eq(systemChannels.channelId, interaction.channelId),
   });
-  if (!channel || channel.channelType !== "market") {
-    await interaction.reply({ content: "You can only sell at a station market.", flags: 64 });
+  if (!channel) {
+    await interaction.reply({ content: "This channel is not a game channel.", flags: 64 });
     return;
   }
 
@@ -65,7 +70,8 @@ export async function handleSellAll(interaction: ButtonInteraction): Promise<voi
 
     totalCredits += credits;
     const displayName = itemTypeMap.get(item.itemType)?.displayName ?? item.itemType;
-    lines.push(`• ${item.quantity}x ${displayName} — **${credits.toLocaleString()}¢**`);
+    const emoji = ITEM_EMOJI[item.itemType] ?? "✦";
+    lines.push(`${emoji} **${item.quantity}x** ${displayName} — **${credits.toLocaleString()}¢**`);
   }
 
   await addCredits(userId, totalCredits);
@@ -74,14 +80,24 @@ export async function handleSellAll(interaction: ButtonInteraction): Promise<voi
     ? `\n\n📡 *Proxy market — 20% fee applied.*`
     : "";
 
+  const flavor = pickSellFlavor(userId);
+
   const container = new ContainerBuilder()
     .setAccentColor(proxy ? 0xffaa00 : 0x00cc66)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `💰 **Sold Everything!**\n\n` +
+        `💰 ${flavor}\n\n` +
         lines.join("\n") +
         `\n\n**Total earned: ${totalCredits.toLocaleString()}¢**` +
         proxyNote
+      )
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("menu_open")
+          .setLabel("🏠 Menu")
+          .setStyle(ButtonStyle.Secondary)
       )
     );
 

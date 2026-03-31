@@ -88,20 +88,6 @@ export async function createSystemChannels(
     { channelType: "overview", referenceId: null }
   );
 
-  // Station market
-  await createChannel(
-    "station-market",
-    "Buy and sell goods at this station",
-    { channelType: "market", referenceId: null }
-  );
-
-  // Travel hub
-  await createChannel(
-    "travel-hub",
-    "Depart to other star systems",
-    { channelType: "travel_hub", referenceId: null }
-  );
-
   // Planet channels
   for (const planet of systemPlanets) {
     const typeName = planet.planetType.replace("_", " ");
@@ -175,22 +161,6 @@ function getExpectedChannels(
     name: "system-overview",
     topic: `${system.name} \u2014 ${formatStarType(system.starType)} \u2014 Resource Rating: ${system.resourceRating}/10`,
     channelType: "overview",
-    referenceId: null,
-    isVoice: false,
-  });
-
-  channels.push({
-    name: "station-market",
-    topic: "Buy and sell goods at this station",
-    channelType: "market",
-    referenceId: null,
-    isVoice: false,
-  });
-
-  channels.push({
-    name: "travel-hub",
-    topic: "Depart to other star systems",
-    channelType: "travel_hub",
     referenceId: null,
     isVoice: false,
   });

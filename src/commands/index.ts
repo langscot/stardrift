@@ -14,6 +14,7 @@ import { adminCommand } from "./admin.js";
 import { syncCommand } from "./sync.js";
 import { removeSystemCommand } from "./remove-system.js";
 import { prospectCommand } from "./prospect.js";
+import { whereamiCommand } from "./whereami.js";
 
 export const commands = new Collection<string, Command>();
 
@@ -36,3 +37,4 @@ registerCommand(adminCommand);
 registerCommand(syncCommand);
 registerCommand(removeSystemCommand);
 registerCommand(prospectCommand);
+registerCommand(whereamiCommand);

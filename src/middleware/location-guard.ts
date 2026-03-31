@@ -104,6 +104,22 @@ export async function checkLocation(
     ? await isProxyInGuild(channel.guildId, channel.systemId)
     : false;
 
+  // Update sub-location if the channel maps to a specific planet/belt/etc.
+  if (channel.referenceId != null) {
+    const needsUpdate =
+      player.currentLocationType !== channel.channelType ||
+      player.currentLocationId !== channel.referenceId;
+    if (needsUpdate) {
+      await db
+        .update(players)
+        .set({
+          currentLocationType: channel.channelType,
+          currentLocationId: channel.referenceId,
+        })
+        .where(eq(players.userId, userId));
+    }
+  }
+
   return {
     player,
     systemId: channel.systemId,

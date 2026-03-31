@@ -13,10 +13,10 @@ export async function startTravel(
   arrivesAt: Date,
   fuelCost: number
 ) {
-  // Set player system to null (in transit)
+  // Set player system to null (in transit) and clear sub-location
   await db
     .update(players)
-    .set({ currentSystemId: null })
+    .set({ currentSystemId: null, currentLocationType: null, currentLocationId: null })
     .where(eq(players.userId, playerId));
 
   // Deduct fuel

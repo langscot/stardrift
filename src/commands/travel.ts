@@ -20,10 +20,9 @@ export const travelCommand: Command = {
     .setDescription("Travel to another star system"),
 
   requiresLocation: true,
-  requiresChannel: ["travel_hub"],
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const loc = await checkLocation(interaction, ["travel_hub"]);
+    const loc = await checkLocation(interaction);
     if (!loc) return;
 
     // Get current system
@@ -71,7 +70,7 @@ export const travelCommand: Command = {
         .setAccentColor(0x0066cc)
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `\ud83d\ude80 **Travel Hub** \u2014 ${currentSystem.name}\n` +
+            `\ud83d\ude80 **Travel** \u2014 ${currentSystem.name}\n` +
             `\u26fd Fuel: **${loc.player.fuel}/${loc.player.fuelCapacity}**`
           )
         )
