@@ -1,23 +1,52 @@
-version: '3.9'
+name: stardrift-live
 
 services:
-  bot-live:
-    image: ghcr.io/langscot/stardrift:latest
+  postgres:
+    image: postgres:16-alpine
+    container_name: stardrift-postgres-live
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stellar
+      POSTGRES_PASSWORD: stellar_password
+      POSTGRES_DB: stardrift_live
+    volumes:
+      - postgres_live_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stellar"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: stardrift-redis-live
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_live_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    build: .
+    image: stardrift-local
     container_name: stardrift-bot-live
     restart: unless-stopped
     env_file:
       - .env.live
     environment:
-      DATABASE_URL: postgresql://stellar:stellar_password@stardrift-postgres:5432/stardrift_live
-      REDIS_URL: redis://stardrift-redis:6379/0
+      DATABASE_URL: postgresql://stellar:stellar_password@postgres:5432/stardrift_live
+      REDIS_URL: redis://redis:6379/0
       NODE_ENV: production
     depends_on:
-      - postgres
-      - redis
-    networks:
-      - stardrift-network
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-networks:
-  stardrift-network:
-    external: true
-    name: stardrift-network
+volumes:
+  postgres_live_data:
+  redis_live_data:

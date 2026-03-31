@@ -4,7 +4,8 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "concurrently -k -n bot,docs -c blue,magenta \"tsx --watch src/index.ts\" \"pnpm docs:dev\"",
+    "dev": "tsx --watch src/index.ts",
+    "dev:all": "concurrently -k -n bot,docs -c blue,magenta \"tsx --watch src/index.ts\" \"pnpm docs:dev\"",
     "build": "tsc",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
