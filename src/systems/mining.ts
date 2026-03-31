@@ -4,7 +4,7 @@
 
 import type { PlanetType } from "./galaxy.js";
 
-interface MiningDrop {
+interface MiningDropEntry {
   itemType: string;
   minQty: number;
   maxQty: number;
@@ -14,7 +14,7 @@ interface MiningDrop {
 /**
  * Ore tables per planet type. Each entry has a weight for random selection.
  */
-const PLANET_ORE_TABLES: Record<string, MiningDrop[]> = {
+const PLANET_ORE_TABLES: Record<string, MiningDropEntry[]> = {
   rocky: [
     { itemType: "iron_ore", minQty: 2, maxQty: 5, weight: 40 },
     { itemType: "copper_ore", minQty: 1, maxQty: 4, weight: 30 },
@@ -58,7 +58,7 @@ const PLANET_ORE_TABLES: Record<string, MiningDrop[]> = {
 /**
  * Asteroid belt ore table — richness affects yield multiplier.
  */
-const BELT_ORE_TABLE: MiningDrop[] = [
+const BELT_ORE_TABLE: MiningDropEntry[] = [
   { itemType: "iron_ore", minQty: 2, maxQty: 5, weight: 35 },
   { itemType: "copper_ore", minQty: 1, maxQty: 4, weight: 25 },
   { itemType: "silicon_ore", minQty: 1, maxQty: 3, weight: 20 },
@@ -66,35 +66,64 @@ const BELT_ORE_TABLE: MiningDrop[] = [
   { itemType: "platinum_ore", minQty: 1, maxQty: 1, weight: 8 },
 ];
 
-export interface MiningResult {
+export interface MiningDrop {
   itemType: string;
   quantity: number;
 }
 
+export type MiningResult = MiningDrop[];
+
 /**
- * Roll a mining result for a planet.
+ * Roll mining results for a planet. Returns 1–3 distinct drops.
  */
 export function rollPlanetMining(planetType: string): MiningResult {
   const table = PLANET_ORE_TABLES[planetType];
   if (!table) {
-    // Fallback for unknown planet types
-    return { itemType: "iron_ore", quantity: 1 };
+    return [{ itemType: "iron_ore", quantity: 1 }];
   }
-  return rollFromTable(table);
+  return rollMultipleFromTable(table);
 }
 
 /**
- * Roll a mining result for an asteroid belt.
+ * Roll mining results for an asteroid belt. Returns 1–3 distinct drops.
  */
 export function rollBeltMining(richness: number): MiningResult {
-  const result = rollFromTable(BELT_ORE_TABLE);
+  const results = rollMultipleFromTable(BELT_ORE_TABLE);
   // Richness multiplier: richness 1 = 1x, richness 5 = 1.5x
   const multiplier = 1 + (richness - 1) * 0.125;
-  result.quantity = Math.max(1, Math.round(result.quantity * multiplier));
-  return result;
+  for (const drop of results) {
+    drop.quantity = Math.max(1, Math.round(drop.quantity * multiplier));
+  }
+  return results;
 }
 
-function rollFromTable(table: MiningDrop[]): MiningResult {
+/**
+ * Roll 1–3 drops from a table. Each additional drop has decreasing probability.
+ * Second drop: 50% chance. Third drop: 20% chance.
+ */
+function rollMultipleFromTable(table: MiningDropEntry[]): MiningResult {
+  const drops = new Map<string, number>();
+
+  // Always get at least one drop
+  const first = rollOneFromTable(table);
+  drops.set(first.itemType, (drops.get(first.itemType) ?? 0) + first.quantity);
+
+  // 50% chance of a second drop
+  if (Math.random() < 0.5) {
+    const second = rollOneFromTable(table);
+    drops.set(second.itemType, (drops.get(second.itemType) ?? 0) + second.quantity);
+
+    // 20% chance of a third drop (only if second was rolled)
+    if (Math.random() < 0.2) {
+      const third = rollOneFromTable(table);
+      drops.set(third.itemType, (drops.get(third.itemType) ?? 0) + third.quantity);
+    }
+  }
+
+  return Array.from(drops, ([itemType, quantity]) => ({ itemType, quantity }));
+}
+
+function rollOneFromTable(table: MiningDropEntry[]): { itemType: string; quantity: number } {
   const totalWeight = table.reduce((sum, d) => sum + d.weight, 0);
   let roll = Math.random() * totalWeight;
 

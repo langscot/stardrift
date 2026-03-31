@@ -27,8 +27,6 @@ export interface MenuContext {
  */
 export function mainMenuDisplay(ctx: MenuContext): ContainerBuilder[] {
   const creditStr = Number(ctx.credits).toLocaleString();
-  const fuelBar = fuelIndicator(ctx.fuel, ctx.fuelCapacity);
-  const cargoBar = cargoIndicator(ctx.cargoUsed, ctx.cargoCapacity);
   const locationStr = ctx.isTransit ? "🚀 *In transit...*" : `📍 **${ctx.systemName}**`;
 
   const dashboard = new ContainerBuilder()
@@ -37,9 +35,9 @@ export function mainMenuDisplay(ctx: MenuContext): ContainerBuilder[] {
       new TextDisplayBuilder().setContent(
         `## 🚀 Stardrift — Captain ${ctx.username}\n` +
         `${locationStr}\n\n` +
-        `💰 Credits: **${creditStr}**\n` +
-        `⛽ Fuel: **${ctx.fuel}/${ctx.fuelCapacity}** ${fuelBar}\n` +
-        `📦 Cargo: **\`${ctx.cargoUsed}/${ctx.cargoCapacity}\`** ${cargoBar}`
+        `💰 **${creditStr}¢**\n` +
+        `⛽ Fuel: \`${gaugeBar(ctx.fuel, ctx.fuelCapacity)}\` ${Math.round((ctx.fuel / ctx.fuelCapacity) * 100)}%\n` +
+        `📦 Cargo: \`${gaugeBar(ctx.cargoUsed, ctx.cargoCapacity)}\` ${Math.round((ctx.cargoUsed / ctx.cargoCapacity) * 100)}%`
       )
     );
 
@@ -232,9 +230,9 @@ export function menuStatsDisplay(
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## 📊 Captain Stats — ${username}\n\n` +
-        `💰 Credits: **${Number(credits).toLocaleString()}**\n` +
-        `⛽ Fuel: **${fuel}/${fuelCapacity}**\n` +
-        `📦 Cargo: **\`${cargoUsed}/${cargoCapacity}\`**\n\n` +
+        `💰 **${Number(credits).toLocaleString()}¢**\n` +
+        `⛽ Fuel: \`${gaugeBar(fuel, fuelCapacity)}\` ${Math.round((fuel / fuelCapacity) * 100)}%\n` +
+        `📦 Cargo: \`${gaugeBar(cargoUsed, cargoCapacity)}\` ${Math.round((cargoUsed / cargoCapacity) * 100)}%\n\n` +
         `**Current System**\n` +
         `📍 ${systemName}\n` +
         `${starEmoji(systemStarType)} ${formatStarType(systemStarType)} · Resource Rating: ${systemRating}/10`
@@ -254,16 +252,8 @@ export function menuStatsDisplay(
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function fuelIndicator(fuel: number, max: number): string {
-  const pct = fuel / max;
-  if (pct >= 0.6) return "🟢";
-  if (pct >= 0.3) return "🟡";
-  return "🔴";
-}
-
-function cargoIndicator(used: number, max: number): string {
-  const pct = used / max;
-  if (pct >= 0.9) return "🔴 Full!";
-  if (pct >= 0.6) return "🟡";
-  return "🟢";
+function gaugeBar(value: number, max: number): string {
+  const width = 10;
+  const filled = Math.round((value / max) * width);
+  return "█".repeat(filled) + "░".repeat(width - filled);
 }

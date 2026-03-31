@@ -221,7 +221,7 @@ export function buildPlayerListDisplay(
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `**${p.displayName}**${banBadge}\n` +
-          `ID: \`${p.userId}\` · 💰 ${credits} · ⛽ ${p.fuel}/${p.fuelCapacity} · 📍 ${location}`
+          `ID: \`${p.userId}\` · 💰 ${credits}¢ · ⛽ ${p.fuel}/${p.fuelCapacity} · 📍 ${location}`
         )
       );
     containers.push(container);
@@ -257,7 +257,7 @@ export function buildPlayerDetailDisplay(
       new TextDisplayBuilder().setContent(
         `## 👤 ${player.displayName}\n\n` +
         `**User ID:** \`${player.userId}\`\n` +
-        `**Credits:** 💰 ${credits}\n` +
+        `**Credits:** 💰 ${credits}¢\n` +
         `**Fuel:** ⛽ ${player.fuel}/${player.fuelCapacity}\n` +
         `**Cargo Capacity:** 📦 ${player.cargoCapacity}\n` +
         `**Location:** ${location}\n` +

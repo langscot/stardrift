@@ -13,11 +13,31 @@ import { rollPlanetMining, rollBeltMining } from "./mining.js";
 import { config } from "../config.js";
 import { PROXY_MINING_MULTIPLIER } from "../middleware/location-guard.js";
 
+export interface MinedItem {
+  itemDisplayName: string;
+  quantity: number;
+  emoji?: string;
+  basePrice?: number;
+}
+
+/** Temporary emoji map until emoji column is added to item_types table */
+const ITEM_EMOJI: Record<string, string> = {
+  iron_ore: "<:iron_ore:1488250230737600622>",
+  copper_ore: "<:copper_ore:1488250220969070713>",
+  silicon_ore: "<:silicon_ore:1488250233178816622>",
+  titanium_ore: "<:titanium_ore:1488250234558611639>",
+  platinum_ore: "<:platinum_ore:1488250231899426898>",
+  crystal_ore: "<:crystal_ore:1488250223368339620>",
+  dark_matter: "<:dark_matter:1488250225285136424>",
+  helium_gas: "<:helium_gas:1488250226379718709>",
+  hydrogen_gas: "<:hydrogen_gas:1488250227784683781>",
+  ice_crystal: "<:ice_crystal:1488250229252685854>",
+};
+
 export type MiningActionResult =
   | {
       type: "success";
-      itemDisplayName: string;
-      quantity: number;
+      items: MinedItem[];
       cargoUsed: number;
       cargoCapacity: number;
       isProxy: boolean;
@@ -71,20 +91,20 @@ export async function executeMining(
     return { type: "cargo_full" };
   }
 
-  // Roll mining result
-  let result;
+  // Roll mining result (multiple drops)
+  let drops;
   if (channel.channelType === "planet" && channel.referenceId) {
     const planet = await db.query.planets.findFirst({
       where: eq(planets.id, channel.referenceId),
     });
     if (!planet) return { type: "error", message: "Planet not found." };
-    result = rollPlanetMining(planet.planetType);
+    drops = rollPlanetMining(planet.planetType);
   } else if (channel.channelType === "asteroid_belt" && channel.referenceId) {
     const belt = await db.query.asteroidBelts.findFirst({
       where: eq(asteroidBelts.id, channel.referenceId),
     });
     if (!belt) return { type: "error", message: "Belt not found." };
-    result = rollBeltMining(belt.richness);
+    drops = rollBeltMining(belt.richness);
   } else {
     return { type: "error", message: "Nothing to mine here." };
   }
@@ -94,29 +114,49 @@ export async function executeMining(
     ? await isProxyInGuild(channel.guildId, channel.systemId)
     : false;
   if (proxy) {
-    result.quantity = Math.max(1, Math.floor(result.quantity * PROXY_MINING_MULTIPLIER));
+    for (const drop of drops) {
+      drop.quantity = Math.max(1, Math.floor(drop.quantity * PROXY_MINING_MULTIPLIER));
+    }
   }
 
-  // Clamp to cargo space
-  const remainingSpace = cargoCapacity - cargoUsed;
-  result.quantity = Math.min(result.quantity, remainingSpace);
+  // Clamp total to cargo space
+  let remainingSpace = cargoCapacity - cargoUsed;
+  let totalAdded = 0;
+  for (const drop of drops) {
+    drop.quantity = Math.min(drop.quantity, remainingSpace);
+    if (drop.quantity <= 0) continue;
+    remainingSpace -= drop.quantity;
+    totalAdded += drop.quantity;
+  }
+  // Remove drops that got clamped to 0
+  const validDrops = drops.filter(d => d.quantity > 0);
 
-  // Save to cargo
-  await addToCargo(userId, result.itemType, result.quantity);
+  // Save all drops to cargo
+  for (const drop of validDrops) {
+    await addToCargo(userId, drop.itemType, drop.quantity);
+  }
 
   // Set cooldown
   await setCooldown(userId, "mine", config.MINING_COOLDOWN_SECONDS);
 
-  // Get display name
-  const item = await db.query.itemTypes.findFirst({
-    where: eq(itemTypes.key, result.itemType),
+  // Resolve display names
+  const allItemTypes = await db.query.itemTypes.findMany();
+  const itemTypeMap = new Map(allItemTypes.map(it => [it.key, { displayName: it.displayName, basePrice: it.basePrice }]));
+
+  const items: MinedItem[] = validDrops.map(drop => {
+    const info = itemTypeMap.get(drop.itemType);
+    return {
+      itemDisplayName: info?.displayName ?? drop.itemType,
+      quantity: drop.quantity,
+      emoji: ITEM_EMOJI[drop.itemType],
+      basePrice: info?.basePrice,
+    };
   });
 
   return {
     type: "success",
-    itemDisplayName: item?.displayName ?? result.itemType,
-    quantity: result.quantity,
-    cargoUsed: cargoUsed + result.quantity,
+    items,
+    cargoUsed: cargoUsed + totalAdded,
     cargoCapacity,
     isProxy: proxy,
     channelType: channel.channelType,

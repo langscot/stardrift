@@ -35,7 +35,7 @@ export function sellMenuDisplay(data: SellDisplayData): ContainerBuilder[] {
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
           .setCustomId("sell_all")
-          .setLabel(`💰 Sell Everything (~${totalValue.toLocaleString()} cr)`)
+          .setLabel(`💰 Sell Everything (~${totalValue.toLocaleString()}¢)`)
           .setStyle(ButtonStyle.Success)
       )
     );
@@ -57,8 +57,8 @@ export function sellMenuDisplay(data: SellDisplayData): ContainerBuilder[] {
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `${indicator} **${price.displayName}**\n` +
-          `Price: **${price.currentPrice}** cr/unit (${percentOfBase}% of base)\n` +
-          `You have: **\`${item.quantity}\`** \u2014 Total value: **\`${totalValue.toLocaleString()}\`** cr`
+          `Price: **${price.currentPrice}¢**/unit (${percentOfBase}% of base)\n` +
+          `You have: **\`${item.quantity}\`** \u2014 Total value: **\`${totalValue.toLocaleString()}¢\`**`
         )
       )
       .addActionRowComponents(

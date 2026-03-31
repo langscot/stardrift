@@ -53,7 +53,7 @@ export async function handleMenuNav(
       ctx.username = interaction.user.displayName;
       await interaction.reply({
         components: mainMenuDisplay(ctx),
-        flags: MessageFlags.IsComponentsV2 | 64,
+        flags: MessageFlags.IsComponentsV2,
       });
       break;
     }
@@ -177,19 +177,19 @@ export async function handleMenuNav(
       } else if (result.type === "error") {
         await interaction.update({
           components: [
-            miningResultDisplay({ itemDisplayName: result.message, quantity: 0, cargoUsed: 0, cargoCapacity: player.cargoCapacity, showButtons: false }),
+            miningResultDisplay({ items: [{ itemDisplayName: result.message, quantity: 0 }], cargoUsed: 0, cargoCapacity: player.cargoCapacity, showButtons: false }),
           ],
         });
       } else {
         await interaction.update({
           components: [
             miningResultDisplay({
-              itemDisplayName: result.itemDisplayName,
-              quantity: result.quantity,
+              items: result.items,
               cargoUsed: result.cargoUsed,
               cargoCapacity: result.cargoCapacity,
               isProxy: result.isProxy,
               showButtons: true,
+              ownerUserId: interaction.user.id,
               channelType: result.channelType,
               referenceId: result.referenceId,
             }),

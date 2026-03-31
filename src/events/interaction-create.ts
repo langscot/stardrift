@@ -12,6 +12,7 @@ import { handleSellConfirm } from "./buttons/sell-confirm.js";
 import { handleSellAll } from "./buttons/sell-all.js";
 import { handleTravelConfirm } from "./buttons/travel-confirm.js";
 import { handleMineAgain } from "./buttons/mine-again.js";
+import { handleQuickSell } from "./buttons/quick-sell.js";
 import { handleMenuNav } from "./buttons/menu-nav.js";
 import {
   handleProspectOverview,
@@ -90,6 +91,10 @@ export async function handleInteractionCreate(
 
         case "mine_again":
           await handleMineAgain(interaction);
+          break;
+
+        case "quick_sell":
+          await handleQuickSell(interaction);
           break;
 
         case "prospect_overview":

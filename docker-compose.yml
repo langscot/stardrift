@@ -6,8 +6,8 @@ services:
     container_name: stardrift-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: stellar
-      POSTGRES_PASSWORD: stellar_password
+      POSTGRES_USER: stardrift
+      POSTGRES_PASSWORD: stardrift
       POSTGRES_DB: stardrift_live
     volumes:
       - postgres_data:/var/lib/postgresql/data

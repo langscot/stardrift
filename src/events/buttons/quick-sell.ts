@@ -9,12 +9,17 @@ import { recordNpcSale } from "../../db/queries/market.js";
 import { addCredits } from "../../db/queries/players.js";
 import { isProxyInGuild } from "../../db/queries/systems.js";
 import { db } from "../../db/index.js";
-import { players, systemChannels, itemTypes } from "../../db/schema.js";
+import { players, systemChannels } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getTravelState } from "../../redis/travel.js";
 import { PROXY_SELL_MULTIPLIER } from "../../middleware/location-guard.js";
 
-export async function handleSellAll(interaction: ButtonInteraction): Promise<void> {
+/**
+ * Quick-sell button from the mining screen.
+ * Sells entire cargo at NPC prices without needing to be in a market channel.
+ * customId format: quick_sell:{ownerUserId}
+ */
+export async function handleQuickSell(interaction: ButtonInteraction): Promise<void> {
   const userId = interaction.user.id;
 
   const travelState = await getTravelState(userId);
@@ -34,12 +39,7 @@ export async function handleSellAll(interaction: ButtonInteraction): Promise<voi
   const channel = await db.query.systemChannels.findFirst({
     where: eq(systemChannels.channelId, interaction.channelId),
   });
-  if (!channel || channel.channelType !== "market") {
-    await interaction.reply({ content: "You can only sell at a station market.", flags: 64 });
-    return;
-  }
-
-  const proxy = channel.guildId
+  const proxy = channel?.guildId
     ? await isProxyInGuild(channel.guildId, channel.systemId)
     : false;
 
@@ -49,7 +49,6 @@ export async function handleSellAll(interaction: ButtonInteraction): Promise<voi
     return;
   }
 
-  // Sell every item in cargo
   const allItemTypes = await db.query.itemTypes.findMany();
   const itemTypeMap = new Map(allItemTypes.map((it) => [it.key, it]));
 

@@ -47,7 +47,7 @@ export const menuCommand: Command = {
         isTransit,
         channelType: channel?.channelType ?? null,
       }),
-      flags: MessageFlags.IsComponentsV2 | 64,
+      flags: MessageFlags.IsComponentsV2 as number,
     });
   },
 };

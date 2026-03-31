@@ -31,7 +31,7 @@ export function inventoryDisplay(data: InventoryDisplayData): ContainerBuilder[]
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `\ud83d\udcca **Player Status**\n` +
-        `\ud83d\udcb0 Credits: **${data.credits.toLocaleString()}**\n` +
+        `\ud83d\udcb0 **${data.credits.toLocaleString()}¢**\n` +
         `\u26fd Fuel: **${data.fuel}/${data.fuelCapacity}**`
       )
     );

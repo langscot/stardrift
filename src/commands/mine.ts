@@ -13,6 +13,7 @@ import {
   miningResultDisplay,
   miningCooldownDisplay,
   cargoFullDisplay,
+  pickMiningFlavor,
 } from "../ui/mining.js";
 import {
   getTrackedMessageId,
@@ -70,8 +71,7 @@ export const mineCommand: Command = {
 
     // Success — build display
     const displayData = {
-      itemDisplayName: result.itemDisplayName,
-      quantity: result.quantity,
+      items: result.items,
       cargoUsed: result.cargoUsed,
       cargoCapacity: result.cargoCapacity,
       isProxy: result.isProxy,
@@ -79,6 +79,7 @@ export const mineCommand: Command = {
       ownerUserId: userId,
       channelType: result.channelType,
       referenceId: result.referenceId,
+      flavorText: pickMiningFlavor(userId),
     };
 
     const messagePayload = {
@@ -97,8 +98,8 @@ export const mineCommand: Command = {
     const reply = await interaction.fetchReply();
     const messageId = reply.id;
 
-    // Track and start/reset the 2-min inactivity timer
-    trackMessage(interaction.channelId, userId, messageId, channel);
+    // Track so subsequent mines update this message in place
+    trackMessage(interaction.channelId, userId, messageId);
 
     // Tick down the cooldown label every second
     startCooldownCountdown(channel, messageId, config.MINING_COOLDOWN_SECONDS, displayData);

@@ -109,7 +109,7 @@ export async function handleSellConfirm(
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `\ud83d\udcb0 **Sale Complete!**\n` +
-        `Sold **${quantity}x ${item?.displayName ?? itemType}** for **${creditsEarned.toLocaleString()} credits**` +
+        `Sold **${quantity}x ${item?.displayName ?? itemType}** for **${creditsEarned.toLocaleString()}¢**` +
         proxyNote
       )
     );
