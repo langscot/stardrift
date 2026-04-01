@@ -35,6 +35,8 @@ interface MiningDisplayData {
   rareEvent?: RareEventResult;
   /** Resolved modifiers — shown as compact stat line when non-default */
   mods?: ResolvedModifiers;
+  /** Effective cooldown in seconds (after modifier) */
+  effectiveCooldown?: number;
 }
 
 export function pickMiningFlavor(ownerUserId?: string): string {
@@ -59,7 +61,7 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
 
   // Compact stat line — only shown when modifiers are non-default
   const statLine = data.mods && hasNonDefaultMods(data.mods)
-    ? `\n🔧 *${formatModsSummary(data.mods)}*`
+    ? `\n🔧 *${formatModsSummary(data.mods, data.effectiveCooldown)}*`
     : "";
 
   // Rare event section
@@ -159,14 +161,13 @@ function hasNonDefaultMods(mods: ResolvedModifiers): boolean {
   );
 }
 
-function formatModsSummary(mods: ResolvedModifiers): string {
+function formatModsSummary(mods: ResolvedModifiers, effectiveCooldown?: number): string {
   const parts: string[] = [];
   if (mods.yieldMultiplier !== 1.0) {
     parts.push(`Yield ×${mods.yieldMultiplier.toFixed(2)}`);
   }
-  if (mods.cooldownMultiplier !== 1.0) {
-    const effectiveCd = Math.round(30 * mods.cooldownMultiplier);
-    parts.push(`Cooldown ${effectiveCd}s`);
+  if (mods.cooldownMultiplier !== 1.0 && effectiveCooldown != null) {
+    parts.push(`Cooldown ${effectiveCooldown}s`);
   }
   if (mods.rareEventChance > 0) {
     parts.push(`Rare ${Math.round(mods.rareEventChance * 100)}%`);

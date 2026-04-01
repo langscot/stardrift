@@ -89,6 +89,7 @@ export async function handleMineAgain(
     cooldownExpiresAt,
     rareEvent: result.rareEvent,
     mods: result.mods,
+    effectiveCooldown: result.effectiveCooldown,
   };
 
   const messagePayload = {

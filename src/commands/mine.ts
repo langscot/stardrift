@@ -82,6 +82,7 @@ export const mineCommand: Command = {
       cooldownExpiresAt,
       rareEvent: result.rareEvent,
       mods: result.mods,
+      effectiveCooldown: result.effectiveCooldown,
     };
 
     const messagePayload = {

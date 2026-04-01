@@ -224,6 +224,7 @@ export async function handleMenuNav(
               cooldownExpiresAt,
               rareEvent: result.rareEvent,
               mods: result.mods,
+              effectiveCooldown: result.effectiveCooldown,
             }),
           ],
         });
