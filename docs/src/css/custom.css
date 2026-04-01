@@ -230,7 +230,7 @@ article {
 /* ---- Tables ---- */
 table {
   border-collapse: collapse;
-  width: 100%;
+  width: auto;
   font-size: 0.9rem;
   border: 1px solid var(--sd-border-accent);
 }
