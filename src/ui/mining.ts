@@ -63,13 +63,12 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
     );
 
   if (data.showButtons) {
-    const onCooldown = (data.cooldownSeconds ?? 0) > 0;
+    const cooldown = data.cooldownSeconds ?? 0;
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`mine_again:${data.ownerUserId}:${data.channelType}:${data.referenceId ?? "0"}`)
-        .setLabel(onCooldown ? `⏳ Ready in ${data.cooldownSeconds}s` : "⚡ Mine Again")
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(onCooldown),
+        .setLabel(cooldown > 0 ? `⚡ Mine Again (${cooldown}s)` : "⚡ Mine Again")
+        .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`quick_sell:${data.ownerUserId}`)
         .setLabel("💰 Sell All")

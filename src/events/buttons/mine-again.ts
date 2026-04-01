@@ -6,14 +6,13 @@ import { executeMining } from "../../systems/mining-action.js";
 import { config } from "../../config.js";
 import {
   miningResultDisplay,
-  miningCooldownDisplay,
   cargoFullDisplay,
   pickMiningFlavor,
 } from "../../ui/mining.js";
 import {
+  getTracked,
   getTrackedMessageId,
   trackMessage,
-  startCooldownCountdown,
 } from "../../systems/mining-tracker.js";
 
 /**
@@ -49,13 +48,17 @@ export async function handleMineAgain(
 
   const ephemeralV2Flags = MessageFlags.IsComponentsV2 | 64;
 
-  // Cooldown / cargo-full / error — always ephemeral follow-up
+  // Cooldown — update the button label with remaining seconds if we have stored data
   if (result.type === "cooldown") {
-    await interaction.deferUpdate();
-    await interaction.followUp({
-      components: [miningCooldownDisplay(result.remainingSeconds)],
-      flags: ephemeralV2Flags,
-    });
+    const stored = getTracked(interaction.channelId, userId);
+    if (stored && stored.messageId === interaction.message.id) {
+      await interaction.update({
+        components: [miningResultDisplay({ ...stored, showButtons: true, cooldownSeconds: result.remainingSeconds })],
+        flags: MessageFlags.IsComponentsV2 as number,
+      });
+    } else {
+      await interaction.deferUpdate();
+    }
     return;
   }
 
@@ -116,8 +119,5 @@ export async function handleMineAgain(
   }
 
   // Track so subsequent mines update this message in place
-  trackMessage(interaction.channelId, userId, messageId);
-
-  // Tick down the cooldown label every second
-  startCooldownCountdown(channel, messageId, config.MINING_COOLDOWN_SECONDS, displayData);
+  trackMessage(interaction.channelId, userId, { messageId, ...displayData });
 }

@@ -18,7 +18,6 @@ import {
 import {
   getTrackedMessageId,
   trackMessage,
-  startCooldownCountdown,
 } from "../systems/mining-tracker.js";
 
 export const mineCommand: Command = {
@@ -99,9 +98,6 @@ export const mineCommand: Command = {
     const messageId = reply.id;
 
     // Track so subsequent mines update this message in place
-    trackMessage(interaction.channelId, userId, messageId);
-
-    // Tick down the cooldown label every second
-    startCooldownCountdown(channel, messageId, config.MINING_COOLDOWN_SECONDS, displayData);
+    trackMessage(interaction.channelId, userId, { messageId, ...displayData });
   },
 };
