@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
       label: 'Mechanics',
       items: [
         'mechanics/mining',
+        'mechanics/ships-and-modules',
         'mechanics/inventory',
         'mechanics/travel',
         'mechanics/trading',
