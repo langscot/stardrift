@@ -12,7 +12,9 @@ Mining is the primary way to earn credits early on. Use `/mine` in any **planet 
 
 Each `/mine` command rolls a random amount of ore based on the planet type or asteroid belt richness. The result goes directly into your **cargo hold**. If your cargo is full, mining is blocked until you sell or jettison cargo.
 
-Mining has a **30-second cooldown** between actions. After a successful mine, a **Mine Again** button appears — click it for a quick re-queue without retyping the command.
+Mining has a **30-second base cooldown** between actions. After a successful mine, a **Mine Again** button appears — click it for a quick re-queue without retyping the command.
+
+Your mining output is affected by your **ship and fitted modules**. Upgraded lasers increase yield, rapid cycle modules reduce cooldown, and scanners can trigger rare discoveries. See [Ships & Modules](./ships-and-modules.md) for details.
 
 ---
 
@@ -51,6 +53,8 @@ Every system may include one or more asteroid belts. Belts have a **richness rat
 | Platinum Ore | Precious Metal | High value |
 | Crystal Ore | Exotic | High value, volcanic worlds only |
 | Dark Matter | Exotic | Very rare, volcanic worlds only |
+| Anomaly Fragment | Exotic | Rare discovery only (requires scanner) |
+| Ancient Relic | Exotic | Very rare discovery only (requires scanner) |
 | Ice Crystal | Ice | Ice worlds |
 | Helium Gas | Gas | Gas giants |
 | Hydrogen Gas | Gas | Gas giants and ice worlds |
@@ -65,9 +69,19 @@ For maximum yield, travel to the system's home guild server.
 
 ---
 
+## Rare Discoveries
+
+When mining with a **scanner module** fitted, there's a chance of triggering a rare discovery — a bonus on top of your normal ore. These range from dark matter pockets and ancient relics to abandoned cargo crates and fuel leaks. Better scanners increase the frequency of these events.
+
+Rare discoveries are highlighted in your mining results with a ✨ marker. See [Ships & Modules](./ships-and-modules.md) for the full list of possible discoveries.
+
+---
+
 ## Tips
 
 - **Volcanic planets** offer the best ore variety and value, but they're rarer.
 - **Asteroid belt richness** matters — a belt rated 5 yields significantly more than a belt rated 1.
 - Keep an eye on your cargo capacity with `/inventory`. A full hold wastes cooldown ticks.
 - Sell frequently if you're in a busy market; prices decay as more ore floods in.
+- **Upgrade your lasers** early — even Mk1 Lasers pay for themselves quickly.
+- **Fit a scanner** if you want a shot at rare discoveries and high-value anomalies.

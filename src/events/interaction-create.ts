@@ -19,6 +19,8 @@ import {
   handleProspectBody,
   handleProspectSelect,
 } from "./buttons/prospect-nav.js";
+import { handleShopButton, handleShopSelect } from "./buttons/shop-buy.js";
+import { handleLoadoutButton, handleLoadoutSelect } from "./buttons/loadout-fit.js";
 
 // Commands that run before a player exists (setup/admin — skip ensurePlayer)
 const SKIP_ENSURE_PLAYER = new Set(["setup-hub", "admin", "sync"]);
@@ -32,6 +34,7 @@ const MENU_ACTIONS = new Set([
   "menu_mine",
   "menu_sell",
   "menu_travel",
+  "menu_loadout",
 ]);
 
 export async function handleInteractionCreate(
@@ -105,6 +108,17 @@ export async function handleInteractionCreate(
           await handleProspectBody(interaction, args[0], parseInt(args[1], 10));
           break;
 
+        case "shop_tab":
+        case "shop_filter":
+        case "shop_confirm_ship":
+          await handleShopButton(interaction, action, args);
+          break;
+
+        case "loadout_unfit":
+        case "loadout_fit_select":
+          await handleLoadoutButton(interaction, action, args);
+          break;
+
         case "admin_totp_verify":
           if (isAdmin(interaction.user.id)) {
             await handleVerifyButton(interaction);
@@ -142,6 +156,10 @@ export async function handleInteractionCreate(
       const [action, ...args] = interaction.customId.split(":");
       if (action === "prospect_select") {
         await handleProspectSelect(interaction, parseInt(args[0], 10));
+      } else if (action === "loadout_fit") {
+        await handleLoadoutSelect(interaction, parseInt(args[0], 10));
+      } else if (action === "shop_buy_ship_select" || action === "shop_buy_module_select") {
+        await handleShopSelect(interaction, action);
       }
     } catch (error) {
       console.error("Error handling select menu:", error);

@@ -1,22 +1,27 @@
 import { ButtonInteraction, MessageFlags } from "discord.js";
 import { db } from "../../db/index.js";
-import { players, systemChannels, itemTypes } from "../../db/schema.js";
+import { players, systemChannels, itemTypes, playerShips, shipTypes } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getCargoItems, getStationItems, getCargoCount } from "../../db/queries/inventory.js";
 import { getSystemById, getEnrolledSystems } from "../../db/queries/systems.js";
 import { getTravelState } from "../../redis/travel.js";
 import { calculateTravel } from "../../systems/travel.js";
 import { executeMining } from "../../systems/mining-action.js";
+import { resolvePlayerModifiers, type ModifierSource } from "../../systems/modifiers.js";
+import { buildLoadoutData } from "../../commands/loadout.js";
+import { loadoutDisplay } from "../../ui/loadout.js";
 import {
   mainMenuDisplay,
   menuCargoDisplay,
   menuMapDisplay,
   menuStatsDisplay,
+  type ShipStatsInfo,
 } from "../../ui/menu.js";
 import {
   miningResultDisplay,
   miningCooldownDisplay,
   cargoFullDisplay,
+  pickMiningFlavor,
 } from "../../ui/mining.js";
 
 /**
@@ -145,6 +150,10 @@ export async function handleMenuNav(
         : null;
       const cargoUsed = await getCargoCount(player.userId);
 
+      // Build ship stats for display
+      const shipStats = await getShipStatsInfo(player.userId);
+      const mods = await resolvePlayerModifiers(player.userId, { isProxy: false });
+
       await interaction.update({
         components: menuStatsDisplay(
           interaction.user.displayName,
@@ -155,8 +164,26 @@ export async function handleMenuNav(
           player.cargoCapacity,
           systemName,
           system?.starType ?? "yellow_dwarf",
-          system?.resourceRating ?? 5
+          system?.resourceRating ?? 5,
+          shipStats
+            ? {
+                shipName: shipStats.displayName,
+                moduleSlots: shipStats.moduleSlots,
+                yieldMultiplier: mods.yieldMultiplier,
+                cooldownMultiplier: mods.cooldownMultiplier,
+                rareEventChance: mods.rareEventChance,
+                cargoBonus: mods.cargoBonus,
+              }
+            : undefined
         ),
+      });
+      break;
+    }
+
+    case "menu_loadout": {
+      const data = await buildLoadoutData(player.userId, player.cargoCapacity);
+      await interaction.update({
+        components: loadoutDisplay(data),
       });
       break;
     }
@@ -181,6 +208,7 @@ export async function handleMenuNav(
           ],
         });
       } else {
+        const cooldownExpiresAt = Math.floor(Date.now() / 1000) + result.effectiveCooldown;
         await interaction.update({
           components: [
             miningResultDisplay({
@@ -192,6 +220,10 @@ export async function handleMenuNav(
               ownerUserId: interaction.user.id,
               channelType: result.channelType,
               referenceId: result.referenceId,
+              flavorText: pickMiningFlavor(interaction.user.id),
+              cooldownExpiresAt,
+              rareEvent: result.rareEvent,
+              mods: result.mods,
             }),
           ],
         });
@@ -202,6 +234,17 @@ export async function handleMenuNav(
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+async function getShipStatsInfo(userId: string) {
+  const ship = await db.query.playerShips.findFirst({
+    where: eq(playerShips.playerId, userId),
+  });
+  if (!ship) return null;
+  const shipType = await db.query.shipTypes.findFirst({
+    where: eq(shipTypes.key, ship.shipKey),
+  });
+  return shipType ?? null;
+}
 
 async function buildMenuContext(
   player: { userId: string; credits: bigint | number; fuel: number; fuelCapacity: number; cargoCapacity: number; currentSystemId: number | null },

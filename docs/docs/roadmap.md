@@ -20,12 +20,16 @@ Stardrift launched as a focused MVP. Here's where the game is headed.
 - ✅ **Star Map** — Local galaxy view with nearby system info
 - ✅ **Proxy Systems** — Mirror systems across multiple servers
 - ✅ **100,000+ System Galaxy** — Pre-generated persistent universe
+- ✅ **Ships & Modules** — 5 ship classes with universal module slots
+- ✅ **Module Shop** — Lasers, scanners, cargo expanders, and utility modules
+- ✅ **Loadout System** — Fit, swap, and manage modules via `/loadout`
+- ✅ **Rare Discoveries** — Scanner-triggered bonus events while mining (dark matter, relics, anomalies)
 
 ---
 
-## Phase 2 — Economy & Ships
+## Phase 2 — Economy
 
-Player-driven markets and a proper ship system are the next major additions.
+Player-driven markets are the next major addition.
 
 ### Player Market
 Replace NPC-only trading with a full order-book market:
@@ -33,25 +37,6 @@ Replace NPC-only trading with a full order-book market:
 - Post **sell orders** (list ore at an asking price)
 - Orders persist until filled or cancelled
 - Cross-system market browsing
-
-### Ship Classes
-Multiple ship hulls with different stats:
-
-| Ship | Role | Cargo | Fuel Tank | Speed |
-|------|------|-------|-----------|-------|
-| Shuttle | Starter | 1,000 | 100 | Standard |
-| Mining Barge | Mining | 5,000 | 200 | Slow |
-| Freighter | Hauling | 20,000 | 500 | Slow |
-| Explorer | Scouting | 500 | 1,000 | Fast |
-| Corvette | Combat | 200 | 300 | Fast |
-| Cruiser | Combat/Fleet | 1,000 | 600 | Standard |
-
-### Ship Modules
-Equip modules to customize your ship:
-- Expanded cargo bays
-- Mining laser upgrades (yield bonuses)
-- Fuel efficiency drives
-- Warp speed enhancers
 
 ---
 

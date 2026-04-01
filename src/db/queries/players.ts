@@ -36,3 +36,13 @@ export async function deductFuel(userId: string, amount: number) {
     .set({ fuel: player.fuel - amount })
     .where(eq(players.userId, userId));
 }
+
+export async function deductCredits(userId: string, amount: number) {
+  const player = await getPlayer(userId);
+  if (!player) throw new Error("Player not found");
+  if (Number(player.credits) < amount) throw new Error("Not enough credits");
+  await db
+    .update(players)
+    .set({ credits: Number(player.credits) - amount })
+    .where(eq(players.userId, userId));
+}

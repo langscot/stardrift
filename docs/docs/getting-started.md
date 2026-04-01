@@ -68,10 +68,22 @@ While in transit you're locked out of game actions but can still chat. You'll ge
 
 ---
 
+## 7. Upgrade Your Ship
+
+Once you've earned some credits, run:
+
+```
+/shop
+```
+
+Browse ships and modules. Start with a **Mk1 Laser** (2,000¢) to boost your mining yield, or save up for a bigger ship with more module slots. Use `/loadout` to fit purchased modules into your ship's slots.
+
+---
+
 ## The Core Loop
 
 ```
-Mine ore  →  Fill cargo hold  →  Sell at market  →  Buy fuel  →  Travel to richer systems  →  Repeat
+Mine ore  →  Sell at market  →  Upgrade ship & modules  →  Travel to richer systems  →  Repeat
 ```
 
-As you accumulate credits you'll be able to upgrade your cargo capacity, travel farther, and eventually participate in player-driven markets across the galaxy.
+As you accumulate credits, upgrade your lasers for better yield, fit scanners to discover rare anomalies, expand your cargo hold, and invest in faster ships to reach distant systems.

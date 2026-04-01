@@ -274,7 +274,7 @@ Focus on the tightest possible loop before adding complexity:
 
 ### Then Layer On (Phase 2+):
 - Player-driven market (buy/sell orders)
-- Ship classes and upgrades
+- ~~Ship classes and upgrades~~ ✅ Implemented (5 ships, 9 modules, universal slots, rare events)
 - Crafting
 - Exploration and discovery
 - Corporations

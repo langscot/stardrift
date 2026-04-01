@@ -8,7 +8,6 @@ import {
 import type { Command } from "./types.js";
 import { ensurePlayer } from "../middleware/player-ensure.js";
 import { executeMining } from "../systems/mining-action.js";
-import { config } from "../config.js";
 import {
   miningResultDisplay,
   miningCooldownDisplay,
@@ -69,6 +68,7 @@ export const mineCommand: Command = {
     }
 
     // Success — build display
+    const cooldownExpiresAt = Math.floor(Date.now() / 1000) + result.effectiveCooldown;
     const displayData = {
       items: result.items,
       cargoUsed: result.cargoUsed,
@@ -79,10 +79,13 @@ export const mineCommand: Command = {
       channelType: result.channelType,
       referenceId: result.referenceId,
       flavorText: pickMiningFlavor(userId),
+      cooldownExpiresAt,
+      rareEvent: result.rareEvent,
+      mods: result.mods,
     };
 
     const messagePayload = {
-      components: [miningResultDisplay({ ...displayData, cooldownSeconds: config.MINING_COOLDOWN_SECONDS })],
+      components: [miningResultDisplay(displayData)],
       flags: MessageFlags.IsComponentsV2 as number,
     };
 

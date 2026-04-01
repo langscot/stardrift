@@ -10,6 +10,7 @@ export interface TrackedMiningData {
   channelType?: string;
   referenceId?: number | null;
   flavorText?: string;
+  cooldownExpiresAt?: number;
 }
 
 /** channelId:userId -> tracked mining data */

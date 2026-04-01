@@ -3,7 +3,6 @@ import { db } from "../../db/index.js";
 import { players } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { executeMining } from "../../systems/mining-action.js";
-import { config } from "../../config.js";
 import {
   miningResultDisplay,
   cargoFullDisplay,
@@ -52,8 +51,9 @@ export async function handleMineAgain(
   if (result.type === "cooldown") {
     const stored = getTracked(interaction.channelId, userId);
     if (stored && stored.messageId === interaction.message.id) {
+      const cooldownExpiresAt = stored.cooldownExpiresAt ?? Math.floor(Date.now() / 1000) + result.remainingSeconds;
       await interaction.update({
-        components: [miningResultDisplay({ ...stored, showButtons: true, cooldownSeconds: result.remainingSeconds })],
+        components: [miningResultDisplay({ ...stored, showButtons: true, cooldownExpiresAt })],
         flags: MessageFlags.IsComponentsV2 as number,
       });
     } else {
@@ -75,6 +75,7 @@ export async function handleMineAgain(
   }
 
   // Success — build display
+  const cooldownExpiresAt = Math.floor(Date.now() / 1000) + result.effectiveCooldown;
   const displayData = {
     items: result.items,
     cargoUsed: result.cargoUsed,
@@ -85,10 +86,13 @@ export async function handleMineAgain(
     channelType: result.channelType,
     referenceId: result.referenceId,
     flavorText: pickMiningFlavor(userId),
+    cooldownExpiresAt,
+    rareEvent: result.rareEvent,
+    mods: result.mods,
   };
 
   const messagePayload = {
-    components: [miningResultDisplay({ ...displayData, cooldownSeconds: config.MINING_COOLDOWN_SECONDS })],
+    components: [miningResultDisplay(displayData)],
     flags: MessageFlags.IsComponentsV2 as number,
   };
 

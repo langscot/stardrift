@@ -5,6 +5,8 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
+import type { RareEventResult } from "../systems/mining-action.js";
+import type { ResolvedModifiers } from "../systems/modifiers.js";
 
 export interface MinedItemDisplay {
   itemDisplayName: string;
@@ -25,10 +27,14 @@ interface MiningDisplayData {
   /** Used to construct the Mine Again button customId */
   channelType?: string;
   referenceId?: number | null;
-  /** When > 0, disables the Mine Again button and shows a countdown label */
-  cooldownSeconds?: number;
   /** Pre-picked flavor text — set once so countdown edits don't re-roll it */
   flavorText?: string;
+  /** Unix timestamp (seconds) when the cooldown expires — powers live <t:R> countdown */
+  cooldownExpiresAt?: number;
+  /** Rare event result, if one triggered */
+  rareEvent?: RareEventResult;
+  /** Resolved modifiers — shown as compact stat line when non-default */
+  mods?: ResolvedModifiers;
 }
 
 export function pickMiningFlavor(ownerUserId?: string): string {
@@ -51,6 +57,20 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
     })
     .join("\n");
 
+  // Compact stat line — only shown when modifiers are non-default
+  const statLine = data.mods && hasNonDefaultMods(data.mods)
+    ? `\n🔧 *${formatModsSummary(data.mods)}*`
+    : "";
+
+  // Rare event section
+  const rareEventSection = data.rareEvent
+    ? `\n\n✨ **RARE FIND: ${data.rareEvent.emoji} ${data.rareEvent.name}!**\n` +
+      `*${data.rareEvent.description}*\n` +
+      data.rareEvent.rewards.map(r =>
+        `${r.emoji ?? "✦"} **${r.quantity}x** ${r.itemDisplayName}${r.basePrice != null ? ` — ${(r.basePrice * r.quantity).toLocaleString()}¢` : ""}`
+      ).join("\n")
+    : "";
+
   const container = new ContainerBuilder()
     .setAccentColor(data.isProxy ? 0xffaa00 : 0x00cc66)
     .addTextDisplayComponents(
@@ -58,16 +78,18 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
         `⚡ ${flavor}\n\n` +
         `${itemLines}\n\n` +
         `📦 Cargo: \`${cargoBar(data.cargoUsed, data.cargoCapacity)}\` ${cargoPercent}%` +
-        proxyWarning
+        statLine +
+        proxyWarning +
+        rareEventSection +
+        (data.cooldownExpiresAt ? `\n\n⏳ Lasers recharged <t:${data.cooldownExpiresAt}:R>` : "")
       )
     );
 
   if (data.showButtons) {
-    const cooldown = data.cooldownSeconds ?? 0;
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`mine_again:${data.ownerUserId}:${data.channelType}:${data.referenceId ?? "0"}`)
-        .setLabel(cooldown > 0 ? `⚡ Mine Again (${cooldown}s)` : "⚡ Mine Again")
+        .setLabel("⚡ Mine Again")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`quick_sell:${data.ownerUserId}`)
@@ -85,12 +107,13 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
 }
 
 export function miningCooldownDisplay(remainingSeconds: number): ContainerBuilder {
+  const expiresAt = Math.floor(Date.now() / 1000) + remainingSeconds;
   return new ContainerBuilder()
     .setAccentColor(0xff9900)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `⏳ **Mining Cooldown** — ${remainingSeconds}s remaining\n` +
-        `Your mining equipment needs time to recharge.`
+        `⏳ **Mining Cooldown** — lasers recharged <t:${expiresAt}:R>\n` +
+        `Your mining lasers need time to recharge.`
       )
     )
     .addActionRowComponents(
@@ -124,6 +147,34 @@ function cargoBar(used: number, capacity: number): string {
   const width = 10;
   const filled = Math.round((used / capacity) * width);
   return "█".repeat(filled) + "░".repeat(width - filled);
+}
+
+function hasNonDefaultMods(mods: ResolvedModifiers): boolean {
+  return (
+    mods.yieldMultiplier !== 1.0 ||
+    mods.cooldownMultiplier !== 1.0 ||
+    mods.extraDropChance !== 0 ||
+    mods.rareEventChance !== 0 ||
+    mods.cargoBonus !== 0
+  );
+}
+
+function formatModsSummary(mods: ResolvedModifiers): string {
+  const parts: string[] = [];
+  if (mods.yieldMultiplier !== 1.0) {
+    parts.push(`Yield ×${mods.yieldMultiplier.toFixed(2)}`);
+  }
+  if (mods.cooldownMultiplier !== 1.0) {
+    const effectiveCd = Math.round(30 * mods.cooldownMultiplier);
+    parts.push(`Cooldown ${effectiveCd}s`);
+  }
+  if (mods.rareEventChance > 0) {
+    parts.push(`Rare ${Math.round(mods.rareEventChance * 100)}%`);
+  }
+  if (mods.extraDropChance > 0) {
+    parts.push(`Drops +${Math.round(mods.extraDropChance * 100)}%`);
+  }
+  return parts.join(" · ");
 }
 
 export function cargoFullDisplay(): ContainerBuilder {

@@ -54,6 +54,10 @@ export function mainMenuDisplay(ctx: MenuContext): ContainerBuilder[] {
     new ButtonBuilder()
       .setCustomId("menu_stats")
       .setLabel("📊 Stats")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId("menu_loadout")
+      .setLabel("🔧 Loadout")
       .setStyle(ButtonStyle.Secondary)
   );
   dashboard.addActionRowComponents(navRow);
@@ -208,6 +212,15 @@ export function menuMapDisplay(
 /**
  * Stats sub-screen.
  */
+export interface ShipStatsInfo {
+  shipName: string;
+  moduleSlots: number;
+  yieldMultiplier: number;
+  cooldownMultiplier: number;
+  rareEventChance: number;
+  cargoBonus: number;
+}
+
 export function menuStatsDisplay(
   username: string,
   credits: bigint | number,
@@ -217,8 +230,24 @@ export function menuStatsDisplay(
   cargoCapacity: number,
   systemName: string,
   systemStarType: string,
-  systemRating: number
+  systemRating: number,
+  shipStats?: ShipStatsInfo
 ): ContainerBuilder[] {
+  const effectiveCargo = cargoCapacity + (shipStats?.cargoBonus ?? 0);
+
+  let shipSection = "";
+  if (shipStats) {
+    const modParts: string[] = [];
+    if (shipStats.yieldMultiplier !== 1.0)
+      modParts.push(`Yield ×${shipStats.yieldMultiplier.toFixed(2)}`);
+    if (shipStats.cooldownMultiplier !== 1.0)
+      modParts.push(`Cooldown ×${shipStats.cooldownMultiplier.toFixed(2)}`);
+    if (shipStats.rareEventChance > 0)
+      modParts.push(`Rare Events ${Math.round(shipStats.rareEventChance * 100)}%`);
+    const modsLine = modParts.length > 0 ? `\n🔧 ${modParts.join(" · ")}` : "";
+    shipSection = `\n\n**Ship:** ${shipStats.shipName} (${shipStats.moduleSlots} slots)${modsLine}`;
+  }
+
   const container = new ContainerBuilder()
     .setAccentColor(0x5865f2)
     .addTextDisplayComponents(
@@ -226,8 +255,10 @@ export function menuStatsDisplay(
         `## 📊 Captain Stats — ${username}\n\n` +
         `💰 **${Number(credits).toLocaleString()}¢**\n` +
         `⛽ Fuel: \`${gaugeBar(fuel, fuelCapacity)}\` ${Math.round((fuel / fuelCapacity) * 100)}%\n` +
-        `📦 Cargo: \`${gaugeBar(cargoUsed, cargoCapacity)}\` ${Math.round((cargoUsed / cargoCapacity) * 100)}%\n\n` +
-        `**Current System**\n` +
+        `📦 Cargo: \`${gaugeBar(cargoUsed, effectiveCargo)}\` ${Math.round((cargoUsed / effectiveCargo) * 100)}%` +
+        (shipStats?.cargoBonus ? ` (${cargoCapacity} + ${shipStats.cargoBonus} bonus)` : "") +
+        shipSection +
+        `\n\n**Current System**\n` +
         `📍 ${systemName}\n` +
         `${starEmoji(systemStarType)} ${formatStarType(systemStarType)} · Resource Rating: ${systemRating}/10`
       )

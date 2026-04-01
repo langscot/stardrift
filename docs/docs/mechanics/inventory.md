@@ -13,9 +13,9 @@ Run `/inventory` at any time to see everything your pilot is carrying.
 ### Cargo Hold
 Your ship's on-board storage. Ore mined goes here directly. Cargo travels with your ship — when you jump to another system, your cargo comes with you.
 
-- Default capacity: **1,000 units**
+- Base capacity: **1,000 units**
 - When full, `/mine` is blocked until you make room
-- Capacity can be upgraded (coming in a future update)
+- Capacity can be increased with **Cargo Expander modules** and certain ships (e.g. the Freighter adds +2,000). See [Ships & Modules](./ships-and-modules.md)
 
 ### Station Storage
 Permanent storage at a specific station. When you sell cargo or dock items, they may be held at the station where the transaction occurred. Station storage is per-system — items left at Sol Nexus stay at Sol Nexus.

@@ -100,6 +100,11 @@ export async function handleSellConfirm(
   // Add credits to player
   await addCredits(userId, creditsEarned);
 
+  const updatedPlayer = await db.query.players.findFirst({
+    where: eq(players.userId, userId),
+  });
+  const newBalance = updatedPlayer?.credits ?? 0;
+
   // Get display name
   const item = await db.query.itemTypes.findFirst({
     where: eq(itemTypes.key, itemType),
@@ -118,6 +123,7 @@ export async function handleSellConfirm(
       new TextDisplayBuilder().setContent(
         `\ud83d\udcb0 ${flavor}\n\n` +
         `${emoji} Sold **${quantity}x ${item?.displayName ?? itemType}** for **${creditsEarned.toLocaleString()}¢**` +
+        `\n💳 Balance: **${newBalance.toLocaleString()}¢**` +
         proxyNote
       )
     )

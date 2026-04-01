@@ -76,6 +76,11 @@ export async function handleSellAll(interaction: ButtonInteraction): Promise<voi
 
   await addCredits(userId, totalCredits);
 
+  const updatedPlayer = await db.query.players.findFirst({
+    where: eq(players.userId, userId),
+  });
+  const newBalance = updatedPlayer?.credits ?? 0;
+
   const proxyNote = proxy
     ? `\n\n📡 *Proxy market — 20% fee applied.*`
     : "";
@@ -89,6 +94,7 @@ export async function handleSellAll(interaction: ButtonInteraction): Promise<voi
         `💰 ${flavor}\n\n` +
         lines.join("\n") +
         `\n\n**Total earned: ${totalCredits.toLocaleString()}¢**` +
+        `\n💳 Balance: **${newBalance.toLocaleString()}¢**` +
         proxyNote
       )
     )

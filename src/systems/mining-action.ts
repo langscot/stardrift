@@ -10,8 +10,11 @@ import { getTravelState } from "../redis/travel.js";
 import { isProxyInGuild } from "../db/queries/systems.js";
 import { getCargoCount, addToCargo } from "../db/queries/inventory.js";
 import { rollPlanetMining, rollBeltMining } from "./mining.js";
+import { rollRareEvent, type RolledRareEvent } from "./rare-events.js";
 import { config } from "../config.js";
-import { PROXY_MINING_MULTIPLIER } from "../middleware/location-guard.js";
+import type { ResolvedModifiers } from "./modifiers.js";
+import { DEFAULT_MODIFIERS, resolvePlayerModifiers } from "./modifiers.js";
+import { addCredits } from "../db/queries/players.js";
 
 export interface MinedItem {
   itemDisplayName: string;
@@ -34,6 +37,13 @@ export const ITEM_EMOJI: Record<string, string> = {
   ice_crystal: "<:ice_crystal:1488250229252685854>",
 };
 
+export interface RareEventResult {
+  name: string;
+  emoji: string;
+  description: string;
+  rewards: MinedItem[];
+}
+
 export type MiningActionResult =
   | {
       type: "success";
@@ -44,6 +54,9 @@ export type MiningActionResult =
       channelType: string;
       referenceId: number | null;
       systemId: number;
+      rareEvent?: RareEventResult;
+      effectiveCooldown: number;
+      mods: ResolvedModifiers;
     }
   | { type: "error"; message: string }
   | { type: "cooldown"; remainingSeconds: number }
@@ -53,7 +66,8 @@ export async function executeMining(
   userId: string,
   channelId: string,
   cargoCapacity: number,
-  currentSystemId: number | null
+  currentSystemId: number | null,
+  mods: ResolvedModifiers = DEFAULT_MODIFIERS
 ): Promise<MiningActionResult> {
   // Must be docked
   if (!currentSystemId) {
@@ -85,42 +99,42 @@ export async function executeMining(
     return { type: "cooldown", remainingSeconds: cd.remainingSeconds };
   }
 
-  // Cargo capacity
+  // Cargo capacity (include cargo bonus from modifiers)
+  const proxy = channel.guildId
+    ? await isProxyInGuild(channel.guildId, channel.systemId)
+    : false;
+
+  // Resolve modifiers if not provided (ship + modules + proxy debuff)
+  const resolvedMods = mods !== DEFAULT_MODIFIERS
+    ? mods
+    : await resolvePlayerModifiers(userId, { isProxy: proxy });
+
+  const effectiveCargoCapacity = cargoCapacity + resolvedMods.cargoBonus;
   const cargoUsed = await getCargoCount(userId);
-  if (cargoUsed >= cargoCapacity) {
+  if (cargoUsed >= effectiveCargoCapacity) {
     return { type: "cargo_full" };
   }
 
-  // Roll mining result (multiple drops)
+  // Roll mining result (multiple drops) — modifiers affect yields, drop chances, rare weights
   let drops;
   if (channel.channelType === "planet" && channel.referenceId) {
     const planet = await db.query.planets.findFirst({
       where: eq(planets.id, channel.referenceId),
     });
     if (!planet) return { type: "error", message: "Planet not found." };
-    drops = rollPlanetMining(planet.planetType);
+    drops = rollPlanetMining(planet.planetType, resolvedMods);
   } else if (channel.channelType === "asteroid_belt" && channel.referenceId) {
     const belt = await db.query.asteroidBelts.findFirst({
       where: eq(asteroidBelts.id, channel.referenceId),
     });
     if (!belt) return { type: "error", message: "Belt not found." };
-    drops = rollBeltMining(belt.richness);
+    drops = rollBeltMining(belt.richness, resolvedMods);
   } else {
     return { type: "error", message: "Nothing to mine here." };
   }
 
-  // Proxy debuff
-  const proxy = channel.guildId
-    ? await isProxyInGuild(channel.guildId, channel.systemId)
-    : false;
-  if (proxy) {
-    for (const drop of drops) {
-      drop.quantity = Math.max(1, Math.floor(drop.quantity * PROXY_MINING_MULTIPLIER));
-    }
-  }
-
   // Clamp total to cargo space
-  let remainingSpace = cargoCapacity - cargoUsed;
+  let remainingSpace = effectiveCargoCapacity - cargoUsed;
   let totalAdded = 0;
   for (const drop of drops) {
     drop.quantity = Math.min(drop.quantity, remainingSpace);
@@ -136,10 +150,62 @@ export async function executeMining(
     await addToCargo(userId, drop.itemType, drop.quantity);
   }
 
-  // Set cooldown
-  await setCooldown(userId, "mine", config.MINING_COOLDOWN_SECONDS);
+  // Rare event roll
+  let rareEvent: RareEventResult | undefined;
+  if (resolvedMods.rareEventChance > 0 && Math.random() < resolvedMods.rareEventChance) {
+    const event = rollRareEvent();
 
-  // Resolve display names
+    // Resolve display info and apply rewards
+    const allItemTypes = await db.query.itemTypes.findMany();
+    const itemTypeMap = new Map(allItemTypes.map(it => [it.key, { displayName: it.displayName, basePrice: it.basePrice }]));
+
+    const rewardItems: MinedItem[] = [];
+    for (const reward of event.rewards) {
+      if (reward.type === "item" && reward.itemType) {
+        // Clamp to remaining cargo space
+        const qty = Math.min(reward.quantity, remainingSpace);
+        if (qty > 0) {
+          await addToCargo(userId, reward.itemType, qty);
+          remainingSpace -= qty;
+          totalAdded += qty;
+          const info = itemTypeMap.get(reward.itemType);
+          rewardItems.push({
+            itemDisplayName: info?.displayName ?? reward.itemType,
+            quantity: qty,
+            emoji: ITEM_EMOJI[reward.itemType],
+            basePrice: info?.basePrice,
+          });
+        }
+      } else if (reward.type === "credits") {
+        await addCredits(userId, reward.quantity);
+        rewardItems.push({
+          itemDisplayName: "Credits",
+          quantity: reward.quantity,
+          emoji: "💰",
+        });
+      } else if (reward.type === "fuel") {
+        // Add fuel directly (capped at fuel capacity handled by caller if needed)
+        rewardItems.push({
+          itemDisplayName: "Fuel",
+          quantity: reward.quantity,
+          emoji: "⛽",
+        });
+      }
+    }
+
+    rareEvent = {
+      name: event.name,
+      emoji: event.emoji,
+      description: event.description,
+      rewards: rewardItems,
+    };
+  }
+
+  // Set cooldown — modified by equipment
+  const effectiveCooldown = Math.round(config.MINING_COOLDOWN_SECONDS * resolvedMods.cooldownMultiplier);
+  await setCooldown(userId, "mine", effectiveCooldown);
+
+  // Resolve display names for main drops
   const allItemTypes = await db.query.itemTypes.findMany();
   const itemTypeMap = new Map(allItemTypes.map(it => [it.key, { displayName: it.displayName, basePrice: it.basePrice }]));
 
@@ -157,10 +223,13 @@ export async function executeMining(
     type: "success",
     items,
     cargoUsed: cargoUsed + totalAdded,
-    cargoCapacity,
+    cargoCapacity: effectiveCargoCapacity,
     isProxy: proxy,
     channelType: channel.channelType,
     referenceId: channel.referenceId,
     systemId: channel.systemId,
+    rareEvent,
+    effectiveCooldown,
+    mods: resolvedMods,
   };
 }

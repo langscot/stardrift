@@ -8,7 +8,7 @@ sidebar_position: 1
 
 **Stardrift** is a persistent space MMO played entirely inside Discord. No launcher, no client download — just slash commands and buttons in your server.
 
-The universe is a shared galaxy of over **100,000 star systems**. Each Discord server that joins becomes one of those systems. You mine asteroids, haul cargo across light-years of space, undercut rivals at the market, and eventually build a corporation that spans the galaxy.
+The universe is a shared galaxy of over **100,000 star systems**. Each Discord server that joins becomes one of those systems. You mine asteroids, upgrade your ship with modules, haul cargo across light-years of space, discover rare anomalies, and eventually build a corporation that spans the galaxy.
 
 ---
 
@@ -35,5 +35,6 @@ All gameplay happens through Discord interactions:
 ## Quick Links
 
 - [Getting Started](/getting-started) — spawn, mine, sell, repeat
+- [Ships & Modules](/mechanics/ships-and-modules) — upgrade your ship and fit equipment
 - [Commands Reference](/commands) — every slash command explained
 - [Roadmap](/roadmap) — what's coming next
