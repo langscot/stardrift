@@ -35,6 +35,8 @@ interface MiningDisplayData {
   rareEvent?: RareEventResult;
   /** Resolved modifiers — shown as compact stat line when non-default */
   mods?: ResolvedModifiers;
+  /** Some ore was lost because cargo was nearly full */
+  cargoPartial?: boolean;
   /** Effective cooldown in seconds (after modifier) */
   effectiveCooldown?: number;
 }
@@ -48,6 +50,9 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
   const cargoPercent = Math.round((data.cargoUsed / data.cargoCapacity) * 100);
   const proxyWarning = data.isProxy
     ? `\n\n📡 *Proxy system — yield reduced by 30%. Visit the system's home server for full rates.*`
+    : "";
+  const cargoWarning = data.cargoPartial
+    ? `\n\n⚠️ *Some ore was discarded — cargo nearly full! Use \`/sell\` to free up space.*`
     : "";
 
   const flavor = data.flavorText ?? pickMiningFlavor(data.ownerUserId);
@@ -82,6 +87,7 @@ export function miningResultDisplay(data: MiningDisplayData): ContainerBuilder {
         `📦 Cargo: \`${cargoBar(data.cargoUsed, data.cargoCapacity)}\` ${cargoPercent}%` +
         statLine +
         proxyWarning +
+        cargoWarning +
         rareEventSection +
         (data.cooldownExpiresAt ? `\n\n⏳ Lasers recharged <t:${data.cooldownExpiresAt}:R>` : "")
       )

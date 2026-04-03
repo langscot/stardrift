@@ -14,7 +14,7 @@ import { rollRareEvent, type RolledRareEvent } from "./rare-events.js";
 import { config } from "../config.js";
 import type { ResolvedModifiers } from "./modifiers.js";
 import { DEFAULT_MODIFIERS, resolvePlayerModifiers } from "./modifiers.js";
-import { addCredits } from "../db/queries/players.js";
+import { addCredits, addFuel } from "../db/queries/players.js";
 
 export interface MinedItem {
   itemDisplayName: string;
@@ -55,6 +55,7 @@ export type MiningActionResult =
       referenceId: number | null;
       systemId: number;
       rareEvent?: RareEventResult;
+      cargoPartial: boolean;
       effectiveCooldown: number;
       mods: ResolvedModifiers;
     }
@@ -136,12 +137,15 @@ export async function executeMining(
   // Clamp total to cargo space
   let remainingSpace = effectiveCargoCapacity - cargoUsed;
   let totalAdded = 0;
+  let cargoPartial = false;
+  const totalRolled = drops.reduce((sum, d) => sum + d.quantity, 0);
   for (const drop of drops) {
     drop.quantity = Math.min(drop.quantity, remainingSpace);
     if (drop.quantity <= 0) continue;
     remainingSpace -= drop.quantity;
     totalAdded += drop.quantity;
   }
+  if (totalAdded < totalRolled) cargoPartial = true;
   // Remove drops that got clamped to 0
   const validDrops = drops.filter(d => d.quantity > 0);
 
@@ -150,14 +154,14 @@ export async function executeMining(
     await addToCargo(userId, drop.itemType, drop.quantity);
   }
 
+  // Resolve item display names (shared by drops + rare events)
+  const allItemTypes = await db.query.itemTypes.findMany();
+  const itemTypeMap = new Map(allItemTypes.map(it => [it.key, { displayName: it.displayName, basePrice: it.basePrice }]));
+
   // Rare event roll
   let rareEvent: RareEventResult | undefined;
   if (resolvedMods.rareEventChance > 0 && Math.random() < resolvedMods.rareEventChance) {
     const event = rollRareEvent();
-
-    // Resolve display info and apply rewards
-    const allItemTypes = await db.query.itemTypes.findMany();
-    const itemTypeMap = new Map(allItemTypes.map(it => [it.key, { displayName: it.displayName, basePrice: it.basePrice }]));
 
     const rewardItems: MinedItem[] = [];
     for (const reward of event.rewards) {
@@ -184,7 +188,7 @@ export async function executeMining(
           emoji: "💰",
         });
       } else if (reward.type === "fuel") {
-        // Add fuel directly (capped at fuel capacity handled by caller if needed)
+        await addFuel(userId, reward.quantity);
         rewardItems.push({
           itemDisplayName: "Fuel",
           quantity: reward.quantity,
@@ -204,10 +208,6 @@ export async function executeMining(
   // Set cooldown — modified by equipment
   const effectiveCooldown = Math.round(config.MINING_COOLDOWN_SECONDS * resolvedMods.cooldownMultiplier);
   await setCooldown(userId, "mine", effectiveCooldown);
-
-  // Resolve display names for main drops
-  const allItemTypes = await db.query.itemTypes.findMany();
-  const itemTypeMap = new Map(allItemTypes.map(it => [it.key, { displayName: it.displayName, basePrice: it.basePrice }]));
 
   const items: MinedItem[] = validDrops.map(drop => {
     const info = itemTypeMap.get(drop.itemType);
@@ -229,6 +229,7 @@ export async function executeMining(
     referenceId: channel.referenceId,
     systemId: channel.systemId,
     rareEvent,
+    cargoPartial,
     effectiveCooldown,
     mods: resolvedMods,
   };

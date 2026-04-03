@@ -99,3 +99,101 @@ export async function getCargoCount(playerId: string): Promise<number> {
   const items = await getCargoItems(playerId);
   return items.reduce((sum, item) => sum + item.quantity, 0);
 }
+
+/**
+ * Move items from cargo to station storage at a system.
+ */
+export async function storeFromCargo(
+  playerId: string,
+  itemType: string,
+  quantity: number,
+  systemId: number
+): Promise<boolean> {
+  const removed = await removeFromCargo(playerId, itemType, quantity);
+  if (!removed) return false;
+  await addToStation(playerId, itemType, quantity, systemId);
+  return true;
+}
+
+/**
+ * Move items from station storage to cargo.
+ */
+export async function loadToCargo(
+  playerId: string,
+  itemType: string,
+  quantity: number,
+  systemId: number
+): Promise<boolean> {
+  const removed = await removeFromStation(playerId, itemType, quantity, systemId);
+  if (!removed) return false;
+  await addToCargo(playerId, itemType, quantity);
+  return true;
+}
+
+/**
+ * Add items to station storage at a system.
+ */
+async function addToStation(
+  playerId: string,
+  itemType: string,
+  quantity: number,
+  systemId: number
+) {
+  const existing = await db.query.inventoryItems.findFirst({
+    where: and(
+      eq(inventoryItems.playerId, playerId),
+      eq(inventoryItems.itemType, itemType),
+      eq(inventoryItems.storageType, "station"),
+      eq(inventoryItems.systemId, systemId)
+    ),
+  });
+
+  if (existing) {
+    await db
+      .update(inventoryItems)
+      .set({ quantity: existing.quantity + quantity })
+      .where(eq(inventoryItems.id, existing.id));
+  } else {
+    await db.insert(inventoryItems).values({
+      playerId,
+      itemType,
+      quantity,
+      storageType: "station",
+      systemId,
+    });
+  }
+}
+
+/**
+ * Remove items from station storage. Returns true if successful.
+ */
+async function removeFromStation(
+  playerId: string,
+  itemType: string,
+  quantity: number,
+  systemId: number
+): Promise<boolean> {
+  const existing = await db.query.inventoryItems.findFirst({
+    where: and(
+      eq(inventoryItems.playerId, playerId),
+      eq(inventoryItems.itemType, itemType),
+      eq(inventoryItems.storageType, "station"),
+      eq(inventoryItems.systemId, systemId)
+    ),
+  });
+
+  if (!existing || existing.quantity < quantity) return false;
+
+  const newQty = existing.quantity - quantity;
+  if (newQty === 0) {
+    await db
+      .delete(inventoryItems)
+      .where(eq(inventoryItems.id, existing.id));
+  } else {
+    await db
+      .update(inventoryItems)
+      .set({ quantity: newQty })
+      .where(eq(inventoryItems.id, existing.id));
+  }
+  return true;
+}

@@ -27,6 +27,16 @@ export async function addCredits(userId: string, amount: number) {
     .where(eq(players.userId, userId));
 }
 
+export async function addFuel(userId: string, amount: number) {
+  const player = await getPlayer(userId);
+  if (!player) throw new Error("Player not found");
+  const newFuel = Math.min(player.fuel + amount, player.fuelCapacity);
+  await db
+    .update(players)
+    .set({ fuel: newFuel })
+    .where(eq(players.userId, userId));
+}
+
 export async function deductFuel(userId: string, amount: number) {
   const player = await getPlayer(userId);
   if (!player) throw new Error("Player not found");

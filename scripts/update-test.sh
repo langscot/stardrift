@@ -10,7 +10,7 @@ docker compose -f docker-compose.test.yml pull
 docker compose -f docker-compose.test.yml up -d --force-recreate
 docker run --rm \
   --network stardrift-network \
-  -e DATABASE_URL="postgresql://stellar:stellar_password@stardrift-postgres:5432/stardrift_test" \
+  -e DATABASE_URL="postgresql://stellar:${POSTGRES_PASSWORD:-stellar_password}@stardrift-postgres:5432/stardrift_test" \
   ghcr.io/langscot/stardrift:latest \
   pnpm db:migrate
 echo "Done! Test bot updated."

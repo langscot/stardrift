@@ -17,6 +17,7 @@ import { prospectCommand } from "./prospect.js";
 import { whereamiCommand } from "./whereami.js";
 import { shopCommand } from "./shop.js";
 import { loadoutCommand } from "./loadout.js";
+import { statsCommand } from "./stats.js";
 
 export const commands = new Collection<string, Command>();
 
@@ -42,3 +43,4 @@ registerCommand(prospectCommand);
 registerCommand(whereamiCommand);
 registerCommand(shopCommand);
 registerCommand(loadoutCommand);
+registerCommand(statsCommand);

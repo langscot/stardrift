@@ -21,6 +21,7 @@ import {
 } from "./buttons/prospect-nav.js";
 import { handleShopButton, handleShopSelect } from "./buttons/shop-buy.js";
 import { handleLoadoutButton, handleLoadoutSelect } from "./buttons/loadout-fit.js";
+import { handleStoreAll, handleLoadAll } from "./buttons/inventory-transfer.js";
 
 // Commands that run before a player exists (setup/admin — skip ensurePlayer)
 const SKIP_ENSURE_PLAYER = new Set(["setup-hub", "admin", "sync"]);
@@ -112,6 +113,14 @@ export async function handleInteractionCreate(
         case "shop_filter":
         case "shop_confirm_ship":
           await handleShopButton(interaction, action, args);
+          break;
+
+        case "inv_store_all":
+          await handleStoreAll(interaction);
+          break;
+
+        case "inv_load_all":
+          await handleLoadAll(interaction);
           break;
 
         case "loadout_unfit":

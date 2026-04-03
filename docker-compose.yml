@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: stellar
-      POSTGRES_PASSWORD: stellar_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stellar_password}
       POSTGRES_DB: stardrift
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data

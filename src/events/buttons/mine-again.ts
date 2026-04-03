@@ -13,6 +13,7 @@ import {
   getTrackedMessageId,
   trackMessage,
 } from "../../systems/mining-tracker.js";
+import { checkRateLimit } from "../../redis/cooldowns.js";
 
 /**
  * Handles the "Mine Again" button press.
@@ -28,6 +29,13 @@ export async function handleMineAgain(
   const ownerUserId = parts[1];
   const userId = interaction.user.id;
   const channel = interaction.channel as TextChannel;
+
+  // Rate limit: max 5 clicks per 10 seconds to prevent spam/race conditions
+  const rl = await checkRateLimit(userId, "mine_button", 5, 10);
+  if (!rl.allowed) {
+    await interaction.deferUpdate();
+    return;
+  }
 
   const player = await db.query.players.findFirst({
     where: eq(players.userId, userId),
@@ -89,6 +97,7 @@ export async function handleMineAgain(
     cooldownExpiresAt,
     rareEvent: result.rareEvent,
     mods: result.mods,
+    cargoPartial: result.cargoPartial,
     effectiveCooldown: result.effectiveCooldown,
   };
 

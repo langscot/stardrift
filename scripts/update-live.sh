@@ -20,7 +20,7 @@ echo "Running migrations on live DB..."
 docker exec stardrift-bot-live pnpm db:migrate 2>/dev/null || \
   docker run --rm \
     --network stardrift-network \
-    -e DATABASE_URL="postgresql://stellar:stellar_password@stardrift-postgres:5432/stardrift_live" \
+    -e DATABASE_URL="postgresql://stellar:${POSTGRES_PASSWORD:-stellar_password}@stardrift-postgres:5432/stardrift_live" \
     ghcr.io/langscot/stardrift:latest \
     pnpm db:migrate
 

@@ -7,3 +7,4 @@ dist/
 *.d.ts
 !drizzle.config.ts
 .pnpm-store
+.DS_Store

@@ -267,3 +267,103 @@
   height: 40px;
   background: #2a2a2a;
 }
+
+/* ---- Light mode overrides ---- */
+[data-theme='light'] .hero {
+  background: #ffffff;
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme='light'] .heroGrid {
+  background-image:
+    linear-gradient(rgba(212, 88, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 88, 0, 0.06) 1px, transparent 1px);
+}
+
+[data-theme='light'] .heroLabel {
+  color: #666;
+}
+
+[data-theme='light'] .heroTitle {
+  color: #111;
+}
+
+[data-theme='light'] .heroLine {
+  background: #d45800;
+}
+
+[data-theme='light'] .heroTagline {
+  color: #444;
+}
+
+[data-theme='light'] .btnPrimary {
+  background: #d45800;
+  border-color: #d45800;
+}
+
+[data-theme='light'] .btnPrimary:hover {
+  background: #111;
+  border-color: #111;
+  color: #fff !important;
+}
+
+[data-theme='light'] .btnOutline {
+  color: #d45800 !important;
+  border-color: #d45800;
+}
+
+[data-theme='light'] .btnOutline:hover {
+  background: #d45800;
+  color: #fff !important;
+}
+
+[data-theme='light'] .specsSectionHeader {
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme='light'] .specsSectionCode {
+  color: #666;
+}
+
+[data-theme='light'] .specsGrid {
+  background: #e0e0e0;
+  border-color: #e0e0e0;
+}
+
+[data-theme='light'] .specCard {
+  background: #ffffff;
+  border-top-color: #d45800;
+}
+
+[data-theme='light'] .specCard:hover {
+  background: #f5f5f5;
+}
+
+[data-theme='light'] .specCode {
+  color: #d45800;
+}
+
+[data-theme='light'] .specTitle {
+  color: #111;
+}
+
+[data-theme='light'] .specDesc {
+  color: #555;
+}
+
+[data-theme='light'] .statsBar {
+  border-top-color: #e0e0e0;
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme='light'] .statValue {
+  color: #d45800;
+}
+
+[data-theme='light'] .statLabel {
+  color: #666;
+}
+
+[data-theme='light'] .statDivider {
+  background: #e0e0e0;
+}

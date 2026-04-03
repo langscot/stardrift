@@ -23,6 +23,23 @@ export const PLANET_ORES: Record<string, string[]> = {
 
 export const BELT_ORES = ["Iron Ore", "Copper Ore", "Silicon Ore", "Titanium Ore", "Platinum Ore"];
 
+/**
+ * Estimated average credit value per mine cycle by planet type.
+ * Calculated from ore tables (weighted avg qty * base price * drop probability).
+ */
+const PLANET_VALUE_ESTIMATE: Record<string, number> = {
+  rocky:     95,   // iron(10)+copper(12)+silicon(15)+titanium(30), weighted
+  scorched:  135,  // titanium+platinum heavy
+  temperate: 75,   // common ores only
+  gas_giant: 85,   // helium+hydrogen, higher yields
+  ice:       80,   // ice crystal+silicon+hydrogen
+  barren:    60,   // iron+silicon+copper, low yields
+  volcanic:  185,  // platinum+crystal+dark matter
+  ocean:     0,
+};
+
+const BELT_VALUE_ESTIMATE = 100; // mixed ores, depends on richness
+
 export const PLANET_EMOJI: Record<string, string> = {
   rocky: "🪨", scorched: "🔥", temperate: "🌿", gas_giant: "🌀",
   ice: "❄️", barren: "⬛", volcanic: "🌋", ocean: "🌊",
@@ -83,7 +100,9 @@ export function buildFullReport(
     for (const p of planets) {
       const emoji = PLANET_EMOJI[p.planetType] ?? "🪐";
       const ores = PLANET_ORES[p.planetType] ?? [];
-      lines.push(`${emoji} **${p.name}** *(${p.planetType.replace(/_/g, " ")})*`);
+      const est = PLANET_VALUE_ESTIMATE[p.planetType] ?? 0;
+      const valueTag = est > 0 ? ` · ~${est}¢/mine` : "";
+      lines.push(`${emoji} **${p.name}** *(${p.planetType.replace(/_/g, " ")})*${valueTag}`);
       lines.push(ores.length > 0 ? `> ${ores.join(" · ")}` : `> No extractable resources`);
     }
   }
@@ -92,7 +111,9 @@ export function buildFullReport(
     lines.push(`\n**🪨 Asteroid Belts**`);
     for (const b of belts) {
       const r = Math.min(10, Math.round(b.richness / 10));
-      lines.push(`🪨 **${b.name}**`);
+      const beltMultiplier = 1 + (b.richness - 1) * 0.125;
+      const beltEst = Math.round(BELT_VALUE_ESTIMATE * beltMultiplier);
+      lines.push(`🪨 **${b.name}** · ~${beltEst}¢/mine`);
       lines.push(`> \`${richnessBar(r)}\` ${richnessLabel(r)}`);
       lines.push(`> ${BELT_ORES.join(" · ")}`);
     }
@@ -110,9 +131,10 @@ export function buildFullReport(
 export function buildPlanetReport(planet: PlanetData, systemName: string): string {
   const emoji = PLANET_EMOJI[planet.planetType] ?? "🪐";
   const ores = PLANET_ORES[planet.planetType] ?? [];
+  const est = PLANET_VALUE_ESTIMATE[planet.planetType] ?? 0;
   const lines: string[] = [];
   lines.push(`## ${emoji} ${planet.name}`);
-  lines.push(`*${planet.planetType.replace(/_/g, " ")} · ${systemName}*`);
+  lines.push(`*${planet.planetType.replace(/_/g, " ")} · ${systemName}*${est > 0 ? ` · ~${est}¢/mine` : ""}`);
   if (ores.length > 0) {
     lines.push(`\n**Yields**`);
     lines.push(ores.map(o => `> ${o}`).join("\n"));
@@ -126,9 +148,11 @@ export function buildPlanetReport(planet: PlanetData, systemName: string): strin
 /** Single belt report */
 export function buildBeltReport(belt: BeltData, systemName: string): string {
   const r = Math.min(10, Math.round(belt.richness / 10));
+  const beltMultiplier = 1 + (belt.richness - 1) * 0.125;
+  const beltEst = Math.round(BELT_VALUE_ESTIMATE * beltMultiplier);
   const lines: string[] = [];
   lines.push(`## 🪨 ${belt.name}`);
-  lines.push(`*Asteroid Belt · ${systemName}*`);
+  lines.push(`*Asteroid Belt · ${systemName} · ~${beltEst}¢/mine*`);
   lines.push(`\n**Richness** \`${richnessBar(r)}\` ${richnessLabel(r)}`);
   lines.push(`\n**Yields**`);
   lines.push(BELT_ORES.map(o => `> ${o}`).join("\n"));

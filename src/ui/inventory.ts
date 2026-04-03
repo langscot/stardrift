@@ -3,6 +3,9 @@ import {
   TextDisplayBuilder,
   SeparatorBuilder,
   SeparatorSpacingSize,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 
 interface InventoryItem {
@@ -49,6 +52,16 @@ export function inventoryDisplay(data: InventoryDisplayData): ContainerBuilder[]
         `\ud83d\udce6 **Ship Cargo** (\`${data.cargoUsed}/${data.cargoCapacity}\`)\n${cargoLines}`
       )
     );
+  if (data.cargoItems.length > 0 && data.systemName !== "None") {
+    cargoContainer.addActionRowComponents(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("inv_store_all")
+          .setLabel("📥 Store All at Station")
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+  }
   containers.push(cargoContainer);
 
   // Station storage container
@@ -63,6 +76,16 @@ export function inventoryDisplay(data: InventoryDisplayData): ContainerBuilder[]
         `\ud83c\udfed **Station Storage** (${data.systemName})\n${stationLines}`
       )
     );
+  if (data.stationItems.length > 0) {
+    stationContainer.addActionRowComponents(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("inv_load_all")
+          .setLabel("📤 Load All to Cargo")
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+  }
   containers.push(stationContainer);
 
   return containers;

@@ -26,7 +26,7 @@ async function seed() {
       displayName: "Mining Barge",
       description: "Built for extraction. Slower but mines more.",
       tier: 1,
-      price: 50000,
+      price: 25000,
       moduleSlots: 4,
       modifiers: { yieldMultiplier: 1.1, cooldownMultiplier: 0.9 },
       emoji: "⛏️",

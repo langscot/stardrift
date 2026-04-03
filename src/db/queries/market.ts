@@ -26,9 +26,19 @@ export async function getNpcPrice(
 
   const totalSold = ledger?.totalSold ?? 0;
   const saturation = getSaturationThreshold(itemTypeKey);
+
+  // Time-based demand recovery: sold units decay over time so prices bounce back.
+  // Half-life of 6 hours — after 6h with no sales, effective supply halves.
+  const DECAY_HALF_LIFE_MS = 6 * 60 * 60 * 1000;
+  const elapsed = ledger?.lastSoldAt
+    ? Date.now() - new Date(ledger.lastSoldAt).getTime()
+    : 0;
+  const decayFactor = Math.pow(0.5, elapsed / DECAY_HALF_LIFE_MS);
+  const effectiveSold = totalSold * decayFactor;
+
   const demandMultiplier = Math.max(
     0.2,
-    1.0 - (totalSold / saturation) * 0.8
+    1.0 - (effectiveSold / saturation) * 0.8
   );
 
   return Math.max(1, Math.round(item.basePrice * demandMultiplier));
